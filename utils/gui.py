@@ -15,7 +15,7 @@ class gui:
     
     def __init__(self):
         # Initialize the screen
-        log.log("Initializing screen.")
+        # log.log("Initializing screen.")
         try:
             self.stdscr = curses.initscr()
             self.stdscr.keypad(True)
@@ -24,9 +24,9 @@ class gui:
             curses.cbreak()
             curses.curs_set(0)
             self.height, self.width = self.stdscr.getmaxyx()
-            log.log(f"Screen size: {self.height}x{self.width}")
+            # log.log(f"Screen size: {self.height}x{self.width}")
             if self.height < 20 or self.width < 80:
-                log.log("Screen is too small.", level="ERROR")
+                # log.log("Screen is too small.", level="ERROR")
                 self.end()
                 sys.exit(1)
             curses.start_color()
@@ -35,24 +35,25 @@ class gui:
             self.win_data = dict()
             self.default()
         except:
-            log.log("Failed to initialize screen.", level="ERROR")
+            # log.log("Failed to initialize screen.", level="ERROR")
             self.end()
 
     def box(self, windows):
         # Create a window with a box around it
         try:
-            log.log("Loading box.")
+            # log.log("Loading box.")
             self.win[windows].box(0, 0)
             self.win[windows].addstr(0, 2, ' ' + windows + ' ')
             self.win[windows].refresh()
+            # self.win[windows].nodelay(True) # non-blocking getch
         except:
-            log.log("Failed to load box.", level="ERROR")
+            # log.log("Failed to load box.", level="ERROR")
             self.end()
 
     def default(self):
         # Default page
         try:
-            log.log("Loading default page.")
+            # log.log("Loading default page.")
             if 'default' not in self.win:
                 self.win['default'] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data['default'] = dict()
@@ -68,13 +69,13 @@ class gui:
             self.win['default'].addstr(self.height - 3, 4, "Press 'q' to quit. - (↑•↓ to navigate)")
             self.win['default'].refresh()
         except:
-            log.log("Failed to load default page.", level="ERROR")
+            # log.log("Failed to load default page.", level="ERROR")
             self.end()
 
     def default_nav(self, key):
         # Navigate through the pages
         try:
-            log.log(f"[Default] Key pressed: {key}")
+            # log.log(f"[Default] Key pressed: {key}")
             if key == 113:  # q
                 return -1
             elif key == 66:  # ↓
@@ -96,24 +97,24 @@ class gui:
                 return
             self.default()
         except:
-            log.log("[Default] Failed to navigate.", level="ERROR")
+            # log.log("[Default] Failed to navigate.", level="ERROR")
             self.end()
 
     def services_nav(self, key):
         try:
-            log.log(f"[Services] Key pressed: {key}")
+            # log.log(f"[Services] Key pressed: {key}")
             if key == 113:  # q
                 self.default()
                 return
             self.services()
         except:
-            log.log("[Services] Failed to navigate.", level="ERROR")
+            # log.log("[Services] Failed to navigate.", level="ERROR")
             self.end()
 
     def services(self):
         # Services page
         try:
-            log.log("Loading services page.")
+            # log.log("Loading services page.")
             if 'services' not in self.win:
                 self.win['services'] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data['services'] = dict()
@@ -122,9 +123,20 @@ class gui:
             self.box('services')
             self.win['services'].addstr(3, 4, "Taskmaster - Services")
             self.win['services'].addstr(self.height - 3, 4, "Press 'q' to go back. - (↑•↓ to navigate)")
+            
+            # | name | status | pid | uptime | restarts | exit code
+            self.win['services'].addstr(5, 4, "Name", curses.A_UNDERLINE)
+            self.win['services'].addstr(5, 15, "Status", curses.A_UNDERLINE)
+            self.win['services'].addstr(5, 25, "PID", curses.A_UNDERLINE)
+            self.win['services'].addstr(5, 35, "Uptime", curses.A_UNDERLINE)
+            self.win['services'].addstr(5, 45, "Restarts", curses.A_UNDERLINE)
+            self.win['services'].addstr(5, 55, "Exit code", curses.A_UNDERLINE)
+            
+            
+            
             self.win['services'].refresh()
         except:
-            log.log("Failed to load services page.", level="ERROR")
+            # log.log("Failed to load services page.", level="ERROR")
             self.end()
 
     def end(self):

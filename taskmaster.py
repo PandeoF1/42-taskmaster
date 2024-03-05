@@ -25,10 +25,14 @@ if __name__ == "__main__":
         interface = gui()
         interface.default()
         while True:
-            log.log(interface.win_active)
-            if interface.win_active == 'default' and interface.default_nav(interface.win['default'].getch()) == -1:
+            # log.log(interface.win_active)
+            key = interface.win[interface.win_active].getch()
+            while key == curses.ERR:
+                time.sleep(0.01)
+                key = interface.win[interface.win_active].getch()
+            if interface.win_active == 'default' and interface.default_nav(key) == -1:
                 break
-            if interface.win_active == 'services' and interface.services_nav(interface.win['services'].getch()) == -1:
+            elif interface.win_active == 'services' and interface.services_nav(key) == -1:
                 break
         interface.end()
     except Exception as e:

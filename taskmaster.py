@@ -33,6 +33,7 @@ async def interfaces():
                 break
             elif interface.win_active == 'services' and interface.services_nav(key) == -1:
                 break
+        # Stop all services
         interface.end()
     except Exception as e:
         # log.log(f"An error occurred: {e}", level="ERROR")

@@ -1,0 +1,26 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Python 3",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-python.python",
+                "ms-python.debugpy",
+                "GitHub.copilot",
+				"donjayamanne.python-environment-manager",
+				"donjayamanne.python-extension-pack"
+			]
+		}
+	},
+	"postCreateCommand": "python -m venv venv && source venv/bin/activate && pip3 install -r requirements.txt"
+}

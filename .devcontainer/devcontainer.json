@@ -18,7 +18,8 @@
                 "ms-python.debugpy",
                 "GitHub.copilot",
 				"donjayamanne.python-environment-manager",
-				"donjayamanne.python-extension-pack"
+				"donjayamanne.python-extension-pack",
+				"GitHub.vscode-github-actions"
 			]
 		}
 	},

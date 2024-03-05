@@ -1,2 +1,0 @@
-colorlog==6.8.2
-logging==0.4.9.6

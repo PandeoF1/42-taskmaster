@@ -19,7 +19,9 @@
                 "GitHub.copilot",
 				"donjayamanne.python-environment-manager",
 				"donjayamanne.python-extension-pack",
-				"GitHub.vscode-github-actions"
+				"GitHub.vscode-github-actions",
+				"ms-python.black-formatter",
+				"ms-python.flake8"
 			]
 		}
 	},

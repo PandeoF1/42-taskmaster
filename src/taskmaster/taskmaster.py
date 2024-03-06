@@ -48,7 +48,7 @@ async def interfaces() -> None:
         sys.exit(1)
 
 
-async def taskmaster() -> None:
+async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
     event_loop = asyncio.get_event_loop()
@@ -59,11 +59,18 @@ async def taskmaster() -> None:
     # logger.close()
 
 
+async def services(config: Config) -> None:
+    pass
+
+
 def main() -> None:
-    config = Config()
-    if config is None:
-        sys.exit(1)
-    asyncio.run(taskmaster())
+    try:
+        config = Config()
+    except Exception as e:
+        interface = Gui()
+        interface.configuration_error(e)
+        return
+    asyncio.run(taskmaster(config))
 
 
 if __name__ == "__main__":

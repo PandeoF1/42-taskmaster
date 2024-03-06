@@ -1,4 +1,5 @@
 import yaml
+from .logger import logger
 
 
 class Config:
@@ -11,10 +12,11 @@ class Config:
         try:
             with open("taskmaster.yml", "r") as file:
                 content = yaml.safe_load(file)
-                print(content)
+                logger.info(content)
         except FileNotFoundError:
-            # log.log("No configuration file found.")
-            return None
+            # Throw an error if the file does not exist
+            logger.error("No configuration file found.")
+            raise FileNotFoundError("No configuration file found.")
         except Exception as e:
-            # log.log("Failed to read configuration file.", level="ERROR")
-            return None
+            logger.error(f"Failed to read configuration file. {e}")
+            raise Exception(f"Failed to read configuration file. {e}")

@@ -1,6 +1,7 @@
 import curses
 from .logger import logger
 import sys
+import time
 
 
 class Gui:
@@ -24,15 +25,14 @@ class Gui:
             logger.debug(f"Screen size: {self.height}x{self.width}")
             if self.height < 20 or self.width < 80:
                 logger.error("Screen is too small.")
-                self.end()
                 sys.exit(1)
             curses.start_color()
             curses.use_default_colors()
             self.win = dict()
             self.win_data = dict()
             self.default()
-        except:
-            logger.error("Failed to initialize screen.")
+        except Exception as e:
+            logger.error(f"Failed to initialize screen. {e}")
 
     def box(self, windows) -> None:
         # Create a window with a box around it
@@ -42,8 +42,8 @@ class Gui:
             self.win[windows].addstr(0, 2, " " + windows + " ")
             self.win[windows].refresh()
             # self.win[windows].nodelay(True) # non-blocking getch
-        except:
-            logger.error("Failed to load box.")
+        except Exception as e:
+            logger.error(f"Failed to load box. {e}")
 
     def default(self) -> None:
         # Default page
@@ -69,8 +69,8 @@ class Gui:
                 self.height - 3, 4, "Press 'q' to quit. - (↑•↓ to navigate)"
             )
             self.win["default"].refresh()
-        except:
-            logger.error("Failed to load default page.")
+        except Exception as e:
+            logger.error(f"Failed to load default page. {e}")
 
     def default_nav(self, key: int) -> int:
         # Navigate through the pages
@@ -96,8 +96,8 @@ class Gui:
                     self.services()
                 return 0
             self.default()
-        except:
-            logger.error("[Default] Failed to navigate.")
+        except Exception as e:
+            logger.error(f"[Default] Failed to navigate. {e}")
             return 0
 
     def services_nav(self, key: int) -> None:
@@ -107,8 +107,8 @@ class Gui:
                 self.default()
                 return
             self.services()
-        except:
-            logger.error("[Services] Failed to navigate.")
+        except Exception as e:
+            logger.error(f"[Services] Failed to navigate. {e}")
 
     def services(self) -> None:
         # Services page
@@ -134,10 +134,10 @@ class Gui:
             self.win["services"].addstr(5, 55, "Exit code", curses.A_UNDERLINE)
 
             self.win["services"].refresh()
-        except:
-            logger.error("Failed to load services page.")
+        except Exception as e:
+            logger.error(f"Failed to load services page. {e}")
 
-    def configuration(self) -> None:
+    def configuration_error(self, error) -> None:
         # Configuration page
         try:
             # log.log("Loading configuration page.")
@@ -148,14 +148,25 @@ class Gui:
             self.win_active = "configuration"
             self.box("configuration")
             self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
-            # Print "no configaration file provided"
+            # Print error
             self.win["configuration"].addstr(
-                self.height / 2, self.width / 2 - 31, "No configuration file provided."
+                int(self.height / 2), int(self.width / 2 - 31), f"Error: {error}"
             )
+            count = 6
+            while count > 1:
+                count -= 1
+                self.win["configuration"].addstr(
+                    self.height - 3,
+                    4,
+                    f"Automatically closing in {count} second{'s.' if count > 1 else '. '}",
+                )
+                self.win["configuration"].refresh()
+                time.sleep(1)
             self.win["configuration"].refresh()
-        except:
-            # log.log("Failed to load configuration page.", level="ERROR")
-            self.end()
+        except Exception as e:
+            logger.error(
+                f"Failed to load configuration page. {e}",
+            )
 
     def end(self) -> None:
         # Restore terminal settings and end curses mode
@@ -164,8 +175,8 @@ class Gui:
             curses.nocbreak()
             curses.echo()
             curses.endwin()
-        except:
-            logger.error("Failed to end screen.")
+        except Exception as e:
+            logger.error(f"Failed to end screen. {e}")
 
     def __del__(self) -> None:
         self.end()

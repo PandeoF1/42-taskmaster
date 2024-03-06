@@ -1,0 +1,22 @@
+[project]
+
+name = "taskmaster"
+version = "0.0.1"
+authors = [
+    { name = "Timothee Lafay", email = "tlafay@student.42lyon.fr" },
+    { name = "Theo Nard", email = "tnard@student.42lyon.fr" },
+]
+description = "A process manager project for 42"
+requires-python = ">=3.11"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+taskmaster = "taskmaster.taskmaster:main"

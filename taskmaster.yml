@@ -1,0 +1,16 @@
+services:
+  - name: test
+    command: "sleep 1000"
+    replicas: 1
+    autostart: true
+    restart: always
+    max_restart: 3
+    unexpected_exit_code: [1, 2, 3]
+    started_at: 0
+    force_stop_after: 0
+    stop_signal: SIGKILL
+    stop_timeout: 10
+    logs: ["stdout", "stderr"]
+    env: ["key1=value1", "key2=value2"]
+    working_dir: "./"
+    umask: "0022"

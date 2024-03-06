@@ -24,10 +24,11 @@ def init_signal() -> None:
     signal.signal(signal.SIGINT, signal_handler)
 
 
-async def interfaces() -> None:
+async def interfaces(config) -> None:
     try:
         # logger.log("Starting taskmaster.")
         interface = Gui()
+        interface.config = config
         interface.default()
         while True:
             key = interface.win[interface.win_active].getch()
@@ -53,7 +54,7 @@ async def taskmaster(config: Config) -> None:
     init_signal()
     event_loop = asyncio.get_event_loop()
     tasks = [
-        event_loop.create_task(interfaces()),
+        event_loop.create_task(interfaces(config)),
     ]
     await asyncio.gather(*tasks)
     # logger.close()

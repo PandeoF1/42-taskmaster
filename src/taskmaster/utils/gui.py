@@ -3,13 +3,14 @@ from .logger import logger
 import sys
 import time
 
+# Generate table
 
 class Gui:
     """
     A class that creates a GUI for the taskmaster application.
     """
 
-    pages = ["services", "wip"]
+    pages = ["services", "config"]
 
     def __init__(self):
         # Initialize the screen
@@ -24,6 +25,7 @@ class Gui:
             self.height, self.width = self.stdscr.getmaxyx()
             logger.debug(f"Screen size: {self.height}x{self.width}")
             if self.height < 20 or self.width < 80:
+                print("Screen is too small.")
                 logger.error("Screen is too small.")
                 sys.exit(1)
             curses.start_color()
@@ -94,6 +96,8 @@ class Gui:
                 # Open the selected page
                 if self.win_data["default"]["selected"] == "services":
                     self.services()
+                if self.win_data["default"]["selected"] == "config":
+                    self.configuration()
                 return 0
             self.default()
         except Exception as e:
@@ -136,6 +140,26 @@ class Gui:
             self.win["services"].refresh()
         except Exception as e:
             logger.error(f"Failed to load services page. {e}")
+
+    def configuration(self) -> None:
+        # Configuration page
+        try:
+            logger.debug("Loading configuration page.")
+            if "configuration" not in self.win:
+                self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
+                self.win_data["configuration"] = dict()
+                self.win_data["configuration"]["selected"] = "config1"
+            self.win_active = "configuration"
+            self.box("configuration")
+            self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
+            # use generate_table
+           #  logger.info(table)
+            self.win["configuration"].addstr(
+                self.height - 3, 4, "Press 'q' to go back. - (↑•↓ to navigate)"
+            )
+            self.win["configuration"].refresh()
+        except Exception as e:
+            logger.error(f"Failed to load configuration page. {e}")
 
     def configuration_error(self, error) -> None:
         # Configuration page

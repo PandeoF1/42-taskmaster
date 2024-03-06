@@ -137,6 +137,26 @@ class Gui:
         except:
             logger.error("Failed to load services page.")
 
+    def configuration(self) -> None:
+        # Configuration page
+        try:
+            # log.log("Loading configuration page.")
+            if "configuration" not in self.win:
+                self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
+                self.win_data["configuration"] = dict()
+                self.win_data["configuration"]["selected"] = "config1"
+            self.win_active = "configuration"
+            self.box("configuration")
+            self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
+            # Print "no configaration file provided"
+            self.win["configuration"].addstr(
+                self.height / 2, self.width / 2 - 31, "No configuration file provided."
+            )
+            self.win["configuration"].refresh()
+        except:
+            # log.log("Failed to load configuration page.", level="ERROR")
+            self.end()
+
     def end(self) -> None:
         # Restore terminal settings and end curses mode
         try:

@@ -7,6 +7,7 @@ from typing import Any
 
 from .utils.logger import logger
 from .utils.gui import Gui
+from .utils.config import Config
 
 # log = logger("taskmaster")
 
@@ -59,6 +60,9 @@ async def taskmaster() -> None:
 
 
 def main() -> None:
+    config = Config()
+    if config is None:
+        sys.exit(1)
     asyncio.run(taskmaster())
 
 

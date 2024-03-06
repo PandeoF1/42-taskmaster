@@ -3,9 +3,6 @@ from .logger import logger
 import sys
 
 
-log = logger(__name__)
-
-
 class Gui:
     """
     A class that creates a GUI for the taskmaster application.
@@ -15,7 +12,7 @@ class Gui:
 
     def __init__(self):
         # Initialize the screen
-        # log.log("Initializing screen.")
+        logger.debug("Initializing screen.")
         try:
             self.stdscr = curses.initscr()
             self.stdscr.keypad(True)
@@ -24,9 +21,9 @@ class Gui:
             curses.cbreak()
             curses.curs_set(0)
             self.height, self.width = self.stdscr.getmaxyx()
-            # log.log(f"Screen size: {self.height}x{self.width}")
+            logger.debug(f"Screen size: {self.height}x{self.width}")
             if self.height < 20 or self.width < 80:
-                # log.log("Screen is too small.", level="ERROR")
+                logger.error("Screen is too small.")
                 self.end()
                 sys.exit(1)
             curses.start_color()
@@ -35,25 +32,23 @@ class Gui:
             self.win_data = dict()
             self.default()
         except:
-            # log.log("Failed to initialize screen.", level="ERROR")
-            self.end()
+            logger.error("Failed to initialize screen.")
 
     def box(self, windows) -> None:
         # Create a window with a box around it
         try:
-            # log.log("Loading box.")
+            logger.debug("Loading box.")
             self.win[windows].box(0, 0)
             self.win[windows].addstr(0, 2, " " + windows + " ")
             self.win[windows].refresh()
             # self.win[windows].nodelay(True) # non-blocking getch
         except:
-            # log.log("Failed to load box.", level="ERROR")
-            self.end()
+            logger.error("Failed to load box.")
 
     def default(self) -> None:
         # Default page
         try:
-            # log.log("Loading default page.")
+            logger.debug("Loading default page.")
             if "default" not in self.win:
                 self.win["default"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["default"] = dict()
@@ -75,13 +70,12 @@ class Gui:
             )
             self.win["default"].refresh()
         except:
-            # log.log("Failed to load default page.", level="ERROR")
-            self.end()
+            logger.error("Failed to load default page.")
 
     def default_nav(self, key: int) -> int:
         # Navigate through the pages
         try:
-            # log.log(f"[Default] Key pressed: {key}")
+            logger.debug(f"[Default] Key pressed: {key}")
             if key == 113:  # q
                 return -1
             elif key == 66:  # ↓
@@ -103,25 +97,23 @@ class Gui:
                 return 0
             self.default()
         except:
-            # log.log("[Default] Failed to navigate.", level="ERROR")
-            self.end()
+            logger.error("[Default] Failed to navigate.")
             return 0
 
     def services_nav(self, key: int) -> None:
         try:
-            # log.log(f"[Services] Key pressed: {key}")
+            logger.debug(f"[Services] Key pressed: {key}")
             if key == 113:  # q
                 self.default()
                 return
             self.services()
         except:
-            # log.log("[Services] Failed to navigate.", level="ERROR")
-            self.end()
+            logger.error("[Services] Failed to navigate.")
 
     def services(self) -> None:
         # Services page
         try:
-            # log.log("Loading services page.")
+            logger.debug("Loading services page.")
             if "services" not in self.win:
                 self.win["services"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["services"] = dict()
@@ -143,8 +135,7 @@ class Gui:
 
             self.win["services"].refresh()
         except:
-            # log.log("Failed to load services page.", level="ERROR")
-            self.end()
+            logger.error("Failed to load services page.")
 
     def end(self) -> None:
         # Restore terminal settings and end curses mode
@@ -154,7 +145,7 @@ class Gui:
             curses.echo()
             curses.endwin()
         except:
-            log.log("Failed to end screen.", level="ERROR")
+            logger.error("Failed to end screen.")
 
     def __del__(self) -> None:
         self.end()

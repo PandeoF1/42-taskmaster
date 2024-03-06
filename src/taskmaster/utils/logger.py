@@ -1,62 +1,81 @@
 import logging
 import os
 
-class logger:
-    """
-    A class that creates a file logger and directs logs to a file.
+LOG_FILE = os.path.join("logs", "taskmaster.log")
 
-    Attributes:
-        logger_name (str): The name of the logger.
-        log_file (str): The path to the log file.
-    """
 
-    def __init__(self, logger_name: str, log_dir: str = "logs") -> None:
-        """
-        Initializes the Logger object.
+def _init_logger() -> None:  # Create a logger named 'app'
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(LOG_FILE)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s - %(pathname)s:%(lineno)d"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-        Args:
-            logger_name (str): The name of the logger (e.g., "my_app", "db_access").
-            log_dir (str, optional): The directory to store the log file. Defaults to "logs".
-        """
 
-        self.logger_name = logger_name
-        self.log_file = os.path.join(log_dir, f"{logger_name}.log")
+_init_logger()
+logger: logging.Logger = logging.getLogger()
 
-        # Ensure the log directory exists
-        os.makedirs(log_dir, exist_ok=True)
+# class logger:
+#     """
+#     A class that creates a file logger and directs logs to a file.
 
-        # Create the logger instance
-        self.logger = logging.getLogger(self.logger_name)
+#     Attributes:
+#         logger_name (str): The name of the logger.
+#         log_file (str): The path to the log file.
+#     """
 
-        # Create a file handler
-        file_handler = logging.FileHandler(self.log_file)
+#     def __init__(self, logger_name: str, log_dir: str = "logs") -> None:
+#         """
+#         Initializes the Logger object.
 
-        # Set a formatter for the log messages
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        file_handler.setFormatter(formatter)
+#         Args:
+#             logger_name (str): The name of the logger (e.g., "my_app", "db_access").
+#             log_dir (str, optional): The directory to store the log file. Defaults to "logs".
+#         """
 
-        # Add the handler to the logger
-        self.logger.addHandler(file_handler)
+#         self.logger_name = logger_name
+#         self.log_file = os.path.join(log_dir, f"{logger_name}.log")
 
-        # Set the logging level (optional)
-        self.logger.setLevel(logging.INFO)  # You can adjust the level as needed
+#         # Ensure the log directory exists
+#         os.makedirs(log_dir, exist_ok=True)
 
-    def log(self, message: str, level: str = "INFO") -> None:
-        """
-        Logs a message to the file.
+#         # Create the logger instance
+#         self.logger = logging.getLogger(self.logger_name)
 
-        Args:
-            message (str): The message to log.
-            level (str, optional): The logging level (e.g., "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"). Defaults to "INFO".
-        """
+#         # Create a file handler
+#         file_handler = logging.FileHandler(self.log_file)
 
-        level_method = getattr(self.logger, level.lower())  # Get the appropriate logging method
-        level_method(message)
+#         # Set a formatter for the log messages
+#         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+#         file_handler.setFormatter(formatter)
 
-    def close(self) -> None:
-        """
-        Closes the file handler associated with the logger.
-        """
+#         # Add the handler to the logger
+#         self.logger.addHandler(file_handler)
 
-        for handler in self.logger.handlers:
-            handler.close()
+#         # Set the logging level (optional)
+#         self.logger.setLevel(logging.INFO)  # You can adjust the level as needed
+
+#     def log(self, message: str, level: str = "INFO") -> None:
+#         """
+#         Logs a message to the file.
+
+#         Args:
+#             message (str): The message to log.
+#             level (str, optional): The logging level (e.g., "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"). Defaults to "INFO".
+#         """
+
+#         level_method = getattr(
+#             self.logger, level.lower()
+#         )  # Get the appropriate logging method
+#         level_method(message)
+
+#     def close(self) -> None:
+#         """
+#         Closes the file handler associated with the logger.
+#         """
+
+#         for handler in self.logger.handlers:
+#             handler.close()

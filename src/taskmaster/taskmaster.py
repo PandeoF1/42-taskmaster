@@ -8,24 +8,24 @@ from typing import Any
 from .utils.logger import logger
 from .utils.gui import Gui
 
-log = logger("taskmaster")
+# log = logger("taskmaster")
 
 
 # Handle ctrl c
 def signal_handler(sig: Any, frame: Any) -> None:
-    # log.log("CTRL+C detected. Exiting...", level="WARNING")
-    log.close()
+    # logger.log("CTRL+C detected. Exiting...", level="WARNING")
+    # logger.close()
     sys.exit(0)
 
 
 def init_signal() -> None:
-    # log.log("Initializing signal handler.")
+    # logger.log("Initializing signal handler.")
     signal.signal(signal.SIGINT, signal_handler)
 
 
 async def interfaces() -> None:
     try:
-        # log.log("Starting taskmaster.")
+        # logger.log("Starting taskmaster.")
         interface = Gui()
         interface.default()
         while True:
@@ -42,19 +42,20 @@ async def interfaces() -> None:
         # Stop all services
         interface.end()
     except Exception as e:
-        # log.log(f"An error occurred: {e}", level="ERROR")
-        log.close()
+        # logger.log(f"An error occurred: {e}", level="ERROR")
+        # logger.close()
         sys.exit(1)
 
 
 async def taskmaster() -> None:
+    logger.info("Starting taskmaster.")
     init_signal()
     event_loop = asyncio.get_event_loop()
     tasks = [
         event_loop.create_task(interfaces()),
     ]
     await asyncio.gather(*tasks)
-    log.close()
+    # logger.close()
 
 
 def main() -> None:

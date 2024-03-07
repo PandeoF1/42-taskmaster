@@ -41,6 +41,10 @@ async def interfaces(config) -> None:
                 interface.win_active == "services" and interface.services_nav(key) == -1
             ):
                 break
+            elif (
+                interface.win_active == "configuration" and interface.config_nav(key) == -1
+            ):
+                break
         # Stop all services
         interface.end()
     except Exception as e:

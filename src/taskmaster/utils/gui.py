@@ -3,7 +3,32 @@ from .logger import logger
 import sys
 import time
 
+
 # Generate table
+def config_table(data):
+    # Get the keys (column names) from the first row of data
+    keys = list(data[0].keys())
+
+    padding = 3
+
+    # Calculate the maximum width for each column
+    max_widths = [len(key) for key in keys]
+    for row in data:
+        for i, value in enumerate(row.values()):
+            max_widths[i] = max(max_widths[i], len(str(value)))
+                
+    content = ""
+    # Print the header
+    for i, key in enumerate(keys):
+        content += f"{key:<{max_widths[i] + padding}}".capitalize()
+    content += "\n"
+    # Print the data
+    for row in data:
+        for i, value in enumerate(row.values()):
+            content += f"{str(value):<{max_widths[i] + padding}}"
+        content += "\n"
+    return content
+
 
 class Gui:
     """
@@ -149,17 +174,52 @@ class Gui:
                 self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["configuration"] = dict()
                 self.win_data["configuration"]["selected"] = "config1"
+                self._config_index = {"x": 0, "y": 0}
             self.win_active = "configuration"
             self.box("configuration")
             self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
-            # use generate_table
-           #  logger.info(table)
+
+            services = self.config.get_services()
+            content = config_table(services)
+            # Display the table content using the _config_index to permit the user to navigate through the table
+            split_content = content.split("\n")
+            for i, line in enumerate(split_content):
+                # print only from index to window width (start the print from x: 4 and y: 5, index are only where to start in the table)
+                # clear the current line
+                self.win["configuration"].addstr(4 + i, 4, " " * (self.width - 6))
+                if i >= self._config_index["y"] and i < self.height:
+                    # If first line
+                    if i == 0:
+                        self.win["configuration"].addstr(4 + i, 4, line[self._config_index["x"] : self._config_index["x"] + self.width - 8], curses.A_UNDERLINE)
+                    else:
+                        self.win["configuration"].addstr(4 + i - self._config_index["y"], 4, line[self._config_index["x"] : self._config_index["x"] + self.width - 8])
+
             self.win["configuration"].addstr(
-                self.height - 3, 4, "Press 'q' to go back. - (↑•↓ to navigate)"
+                self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate)"
             )
             self.win["configuration"].refresh()
         except Exception as e:
             logger.error(f"Failed to load configuration page. {e}")
+
+    def config_nav(self, key: int) -> None:
+        try:
+            logger.debug(f"[Configuration] Key pressed: {key}")
+            if key == 113:  # q
+                self.default()
+                return
+            if key == 65:  # ↑
+                if self._config_index["y"] > 0:
+                    self._config_index["y"] -= 1
+            if key == 66:  # ↓
+                self._config_index["y"] += 1
+            if key == 68: # ←
+                if self._config_index["x"] > 0:
+                    self._config_index["x"] -= 1
+            if key == 67: # →
+                self._config_index["x"] += 1
+            self.configuration()
+        except Exception as e:
+            logger.error(f"[Configuration] Failed to navigate. {e}")
 
     def configuration_error(self, error) -> None:
         # Configuration page

@@ -31,6 +31,7 @@ async def interfaces(config) -> None:
         interface.config = config
         interface.default()
         while True:
+            interface.update_size()
             key = interface.win[interface.win_active].getch()
             while key == curses.ERR:
                 time.sleep(0.01)

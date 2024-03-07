@@ -54,10 +54,10 @@ class Gui:
             curses.curs_set(0)
             self.height, self.width = self.stdscr.getmaxyx()
             logger.debug(f"Screen size: {self.height}x{self.width}")
-            if self.height < 20 or self.width < 80:
-                print("Screen is too small.")
-                logger.error("Screen is too small.")
-                sys.exit(1)
+            while self.height < 20 or self.width < 80:
+                self.screen_too_small()
+                time.sleep(0.1)
+                self.height, self.width = self.stdscr.getmaxyx()
             curses.start_color()
             curses.use_default_colors()
             self.win = dict()
@@ -65,6 +65,48 @@ class Gui:
             self.default()
         except Exception as e:
             logger.error(f"Failed to initialize screen. {e}")
+
+    def screen_too_small(self) -> None:
+        # Print an error message if the screen is too small
+        try:
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, "Screen is too small.")
+            self.stdscr.refresh()
+        except Exception as e:
+            logger.error(f"Failed to print error message. {e}")
+
+    def update_size(self) -> None:
+        # Update the window size
+        try:
+            if (self.height, self.width) != self.stdscr.getmaxyx():
+                self.height, self.width = self.stdscr.getmaxyx()
+                while self.height < 20 or self.width < 80:
+                    self.screen_too_small()
+                    time.sleep(0.1)
+                    self.height, self.width = self.stdscr.getmaxyx()
+                logger.debug(f"Screen size: {self.height}x{self.width}")
+                for window in self.win:
+                    self.win[window].resize(self.height, self.width)
+                self.clear(window)
+                if self.win_active == "default":
+                    self.default()
+                elif self.win_active == "services":
+                    self.services()
+                elif self.win_active == "configuration":
+                    self.configuration()
+                else:
+                    self.default()
+        except Exception as e:
+            logger.error(f"Failed to update screen size. {e}")
+
+    def clear(self, window) -> None:
+        # Clear the window
+        try:
+            logger.debug(f"Clearing window: {window}")
+            self.win[window].clear()
+            self.win[window].refresh()
+        except Exception as e:
+            logger.error(f"Failed to clear window. {e}")
 
     def box(self, windows) -> None:
         # Create a window with a box around it
@@ -198,6 +240,7 @@ class Gui:
                     and i < self.height - 8 + self._config_index["y"]
                 ):
                     if i == 0:
+                        logger.info("???")
                         self.win["configuration"].addstr(
                             4 + i,
                             4,

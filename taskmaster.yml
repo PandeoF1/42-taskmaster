@@ -32,7 +32,7 @@ services:
     stoptime: 10
     stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
     stderr: /tmp/sleep.stderr # Optionnal ("")
-    # user: # Optionnal
+    user: gdgd # Optionnal
 
   - name: sleepc
     cmd: "sleep 100"

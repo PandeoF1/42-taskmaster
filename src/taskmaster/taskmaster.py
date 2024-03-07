@@ -42,7 +42,8 @@ async def interfaces(config) -> None:
             ):
                 break
             elif (
-                interface.win_active == "configuration" and interface.config_nav(key) == -1
+                interface.win_active == "configuration"
+                and interface.config_nav(key) == -1
             ):
                 break
         # Stop all services

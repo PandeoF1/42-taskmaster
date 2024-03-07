@@ -7,7 +7,12 @@ import time
 # Generate table
 def config_table(data):
     # Get the keys (column names) from the first row of data
-    keys = list(data[0].keys())
+    keys = []
+    # Get all the keys of all the services
+    for service in data:
+        for key in service.keys():
+            if key not in keys:
+                keys.append(key)
 
     padding = 3
 
@@ -16,7 +21,7 @@ def config_table(data):
     for row in data:
         for i, value in enumerate(row.values()):
             max_widths[i] = max(max_widths[i], len(str(value)))
-                
+
     content = ""
     # Print the header
     for i, key in enumerate(keys):
@@ -181,18 +186,38 @@ class Gui:
 
             services = self.config.get_services()
             content = config_table(services)
-            # Display the table content using the _config_index to permit the user to navigate through the table
+
             split_content = content.split("\n")
+            # Clear the window
+            for i in range(self.height - 8):
+                self.win["configuration"].addstr(4 + i, 4, " " * (self.width - 6))
             for i, line in enumerate(split_content):
                 # print only from index to window width (start the print from x: 4 and y: 5, index are only where to start in the table)
-                # clear the current line
-                self.win["configuration"].addstr(4 + i, 4, " " * (self.width - 6))
-                if i >= self._config_index["y"] and i < self.height:
-                    # If first line
+                if (
+                    i >= self._config_index["y"]
+                    and i < self.height - 8 + self._config_index["y"]
+                ):
                     if i == 0:
-                        self.win["configuration"].addstr(4 + i, 4, line[self._config_index["x"] : self._config_index["x"] + self.width - 8], curses.A_UNDERLINE)
+                        self.win["configuration"].addstr(
+                            4 + i,
+                            4,
+                            line[
+                                self._config_index["x"] : self._config_index["x"]
+                                + self.width
+                                - 8
+                            ],
+                            curses.A_UNDERLINE,
+                        )
                     else:
-                        self.win["configuration"].addstr(4 + i - self._config_index["y"], 4, line[self._config_index["x"] : self._config_index["x"] + self.width - 8])
+                        self.win["configuration"].addstr(
+                            4 + i - self._config_index["y"],
+                            4,
+                            line[
+                                self._config_index["x"] : self._config_index["x"]
+                                + self.width
+                                - 8
+                            ],
+                        )
 
             self.win["configuration"].addstr(
                 self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate)"
@@ -212,11 +237,11 @@ class Gui:
                     self._config_index["y"] -= 1
             if key == 66:  # ↓
                 self._config_index["y"] += 1
-            if key == 68: # ←
+            if key == 68:  # ←
                 if self._config_index["x"] > 0:
-                    self._config_index["x"] -= 1
-            if key == 67: # →
-                self._config_index["x"] += 1
+                    self._config_index["x"] -= 2
+            if key == 67:  # →
+                self._config_index["x"] += 2
             self.configuration()
         except Exception as e:
             logger.error(f"[Configuration] Failed to navigate. {e}")

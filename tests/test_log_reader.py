@@ -1,9 +1,7 @@
 import unittest
-import tempfile
-import os
 from src.taskmaster.utils.log_reader import LogReader
 
-file_content: str = [
+file_content: list[str] = [
     "Hello, World!\n",
     "Something else\n",
     "aaa\n",
@@ -20,7 +18,7 @@ file_content: str = [
 
 class TestLogReader(unittest.TestCase):
     def setUp(self) -> None:
-        with open("/tmp/test.log", "w+") as f:
+        with open("/tmp/test.log", "w") as f:
             f.writelines(file_content)
         return super().setUp()
 
@@ -39,11 +37,11 @@ class TestLogReader(unittest.TestCase):
 
     def test_read_size_zero(self):
         with open("/tmp/test.log", "r") as f:
-            self.assertRaises(AssertionError, LogReader, f.name, size=0)
+            self.assertRaises(ValueError, LogReader, f.name, size=0)
 
     def test_read_size_negative(self):
         with open("/tmp/test.log", "r") as f:
-            self.assertRaises(AssertionError, LogReader, f.name, size=-1)
+            self.assertRaises(ValueError, LogReader, f.name, size=-1)
 
     def test_up(self):
         with open("/tmp/test.log", "r") as f:
@@ -94,3 +92,21 @@ class TestLogReader(unittest.TestCase):
             reader = LogReader(f.name, size=30)
             reader.latest()
             self.assertEqual(reader.lines, file_content)
+
+    def test_invalid_file(self):
+        self.assertRaises(
+            FileNotFoundError, LogReader, "/reohiushgoiuhgo/wefwugfeuag", size=5
+        )
+
+    def test_size_change(self):
+        with open("/tmp/test.log", "r") as f:
+            reader = LogReader(f.name, size=5)
+            reader.size = 10
+            self.assertEqual(reader.size, 10)
+            self.assertEqual(reader._read(), file_content[:10])
+
+    def test_size_change_invalid(self):
+        with open("/tmp/test.log", "r") as f:
+            reader = LogReader(f.name, size=5)
+            self.assertRaises(ValueError, setattr, reader, "size", 0)
+            self.assertRaises(ValueError, setattr, reader, "size", -1)

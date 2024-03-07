@@ -26,16 +26,21 @@ class LogReader:
         log_file: str = LOG_FILE,
         log_level: str = "DEBUG",
         size: int = 20,
-    ):
+    ) -> None:
+
         self._log_file = open(log_file, "r")
         self._log_level = log_level
         self._start = 0
+
+        if size <= 0:
+            raise ValueError("Size must be greater than 0.")
         self._size = size
-        assert self._size > 0
+
         self._buffer = []
 
-    def __del__(self):
-        self._log_file.close()
+    def __del__(self) -> None:
+        if hasattr(self, "_log_file"):
+            self._log_file.close()
 
     def _read(self) -> list[str]:
         """
@@ -68,7 +73,7 @@ class LogReader:
         return self._size
 
     @size.setter
-    def size(self, size: int) -> None:
+    def size(self, size: int) -> int:
         """
         Setter for the size attribute.
 
@@ -76,10 +81,12 @@ class LogReader:
             size (int): The new size of the buffer.
 
         Returns:
-            None
+            The new size of the buffer.
 
         """
-        self._start -= size - self._size
+        if size <= 0:
+            raise ValueError("Size must be greater than 0.")
+        self._start -= size - self._size if self._start - size + self._size >= 0 else 0
         self._size = size
         return self._size
 

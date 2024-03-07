@@ -7,6 +7,7 @@ from typing import Any
 
 from .utils.logger import logger
 from .utils.gui import Gui
+from .utils.config import Config
 
 # log = logger("taskmaster")
 
@@ -23,12 +24,14 @@ def init_signal() -> None:
     signal.signal(signal.SIGINT, signal_handler)
 
 
-async def interfaces() -> None:
+async def interfaces(config) -> None:
     try:
         # logger.log("Starting taskmaster.")
         interface = Gui()
+        interface.config = config
         interface.default()
         while True:
+            interface.update_size()
             key = interface.win[interface.win_active].getch()
             while key == curses.ERR:
                 time.sleep(0.01)
@@ -39,6 +42,11 @@ async def interfaces() -> None:
                 interface.win_active == "services" and interface.services_nav(key) == -1
             ):
                 break
+            elif (
+                interface.win_active == "configuration"
+                and interface.config_nav(key) == -1
+            ):
+                break
         # Stop all services
         interface.end()
     except Exception as e:
@@ -47,19 +55,29 @@ async def interfaces() -> None:
         sys.exit(1)
 
 
-async def taskmaster() -> None:
+async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
     event_loop = asyncio.get_event_loop()
     tasks = [
-        event_loop.create_task(interfaces()),
+        event_loop.create_task(interfaces(config)),
     ]
     await asyncio.gather(*tasks)
     # logger.close()
 
 
+async def services(config: Config) -> None:
+    pass
+
+
 def main() -> None:
-    asyncio.run(taskmaster())
+    try:
+        config = Config()
+    except Exception as e:
+        interface = Gui()
+        interface.configuration_error(e)
+        return
+    asyncio.run(taskmaster(config))
 
 
 if __name__ == "__main__":

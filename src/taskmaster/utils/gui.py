@@ -225,7 +225,7 @@ class Gui:
             self.box("configuration")
             self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
 
-            services = self.config.get_services()
+            services = self.config.services
             content = config_table(services)
 
             split_content = content.split("\n")
@@ -239,7 +239,6 @@ class Gui:
                     and i < self.height - 8 + self._config_index["y"]
                 ):
                     if i == 0:
-                        logger.info("???")
                         self.win["configuration"].addstr(
                             4 + i,
                             4,

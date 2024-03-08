@@ -1,0 +1,18 @@
+services:
+  - name: sleep
+    cmd: "sleep 100"
+    numprocs: 8
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1
+    stoptime: 10
+    stdout: /tmp/sleep.stdout
+    stderr: /tmp/sleep.stderr
+    user: test

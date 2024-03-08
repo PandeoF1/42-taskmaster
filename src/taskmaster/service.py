@@ -1,4 +1,6 @@
 from typing import List, Dict, Any, Optional
+from enum import Enum
+import subprocess
 
 
 class ServiceConfig:
@@ -27,7 +29,9 @@ services:
     workingdir: /tmp
     autostart: true
     autorestart: unexpected # always, never unexpected
-    exitcodes: 0
+    exitcodes:
+      - 0
+      - 2
     startretries: 3
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
@@ -35,6 +39,9 @@ services:
     stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
     stderr: /tmp/sleep.stderr # Optionnal ("")
     user: # Optionnal
+    env:
+      STARTED_BY: taskmaster
+      ANSWER: 42
 """
 
 
@@ -42,6 +49,40 @@ class ProgramConfig:
     """
     The configuration of a program.
     """
+
+    class AutoStart(Enum):
+        """
+        Enumeration for auto restart options.
+
+        Options:
+        - ALWAYS: Always restart the service.
+        - NEVER: Never restart the service.
+        - UNEXPECTED: Restart the service only if it terminates unexpectedly.
+        """
+
+        ALWAYS = "always"
+        NEVER = "never"
+        UNEXPECTED = "unexpected"
+
+    class Signal(Enum):
+        """
+        Enumeration for signals.
+
+        Options:
+        - USR1: User-defined signal 1.
+        - USR2: User-defined signal 2.
+        - INT: Interrupt signal.
+        - TERM: Terminate signal.
+        - HUP: Hangup signal.
+        - QUIT: Quit signal.
+        """
+
+        USR1 = "USR1"
+        USR2 = "USR2"
+        INT = "INT"
+        TERM = "TERM"
+        HUP = "HUP"
+        QUIT = "QUIT"
 
     def __init__(
         self,
@@ -52,15 +93,17 @@ class ProgramConfig:
         self.numprocs: int | None = None
         self.umask: int | None = None
         self.workingdir: str | None = None
-        self.autostart: bool | None = None
+        self.autostart: ProgramConfig.AutoStart | None = None
         self.autorestart: str | None = None
         self.exitcodes: List[int] | None = None
         self.startretries: int | None = None
         self.starttime: int | None = None
-        self.stopsignal: str | None = None
+        self.stopsignal: ProgramConfig.Signal | None = None
         self.stoptime: int | None = None
         self.stdout: str | None = None
         self.stderr: str | None = None
+        self.user: str | None = None
+        self.env: Dict[str, str] | None = None
         self.__dict__.update(config)
 
     def __iter__(self) -> Any:
@@ -115,7 +158,9 @@ class Program:
         """
         Starts the program.
         """
-        pass
+
+        if self._config.cmd:
+            subprocess.Popen(self._config.cmd.split(), cwd=self._config.workingdir)
 
     def stop(self) -> None:
         """

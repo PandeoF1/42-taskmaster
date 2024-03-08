@@ -1,9 +1,46 @@
 import yaml
 from .logger import logger
 from cerberus import Validator, SchemaError
+from enum import Enum
 
 
-def validate_dict(data: dict, template: dict) -> bool:
+class AutoRestart(Enum):
+    """
+    Enumeration for auto restart options.
+
+    Options:
+    - ALWAYS: Always restart the service.
+    - NEVER: Never restart the service.
+    - UNEXPECTED: Restart the service only if it terminates unexpectedly.
+    """
+
+    ALWAYS = "always"
+    NEVER = "never"
+    UNEXPECTED = "unexpected"
+
+
+class Signal(Enum):
+    """
+    Enumeration for signals.
+
+    Options:
+    - USR1: User-defined signal 1.
+    - USR2: User-defined signal 2.
+    - INT: Interrupt signal.
+    - TERM: Terminate signal.
+    - HUP: Hangup signal.
+    - QUIT: Quit signal.
+    """
+
+    USR1 = 10
+    USR2 = 12
+    INT = 2
+    TERM = 15
+    HUP = 1
+    QUIT = 3
+
+
+def validate_dict(data: dict, template: dict) -> str | None:
     for key, expected_type in template.items():
         if not len(data) == len(template):
             return "Invalid number of keys."
@@ -52,7 +89,7 @@ schema = {
                 "autorestart": {
                     "type": "string",
                     "required": True,
-                    "allowed": ["unexpected", "always", "never"],
+                    "allowed": [e.value for e in AutoRestart],
                 },
                 "exitcodes": {
                     "type": "list",
@@ -69,7 +106,7 @@ schema = {
                 "stopsignal": {
                     "type": "string",
                     "required": True,
-                    "allowed": ["TERM", "HUP", "INT", "QUIT", "KILL", "USR1", "USR2"],
+                    "allowed": [e.name for e in Signal],
                 },
                 "stoptime": {
                     "type": "integer",
@@ -113,10 +150,10 @@ class Config:
         except SchemaError as e:
             print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
-            raise Exception(f"Invalid configuration file.")
+            raise Exception("Invalid configuration file.")
         except Exception:
-            logger.error(f"Failed to read configuration file.")
-            raise Exception(f"Failed to read configuration file.")
+            logger.error("Failed to read configuration file.")
+            raise Exception("Failed to read configuration file.")
 
     def get_services(self):
         return self.config["services"]

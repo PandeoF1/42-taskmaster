@@ -24,6 +24,8 @@ schema = {
                 "name": {
                     "type": "string",
                     "required": True,
+                    "maxlength": 32,
+                    "minlength": 1,
                 },
                 "cmd": {
                     "type": "string",
@@ -61,7 +63,7 @@ schema = {
                 },
                 "startretries": {
                     "type": "integer",
-                    "min": 0,
+                    "min": 1,
                     "max": 10,
                     "required": True,
                 },
@@ -98,13 +100,17 @@ class Config:
     A class to handle the configuration file for Taskmaster.
     """
 
-    def __init__(self):
+    def __init__(self, path="taskmaster.yml"):
         # Try to open if it exists `taskmaster.yml`
         try:
-            with open("taskmaster.yml", "r") as file:
+            with open(path, "r") as file:
                 content = yaml.safe_load(file)
                 if not validator.validate(content):
                     raise SchemaError(validator.errors)
+                # Check if duplicate name
+                names = [service["name"] for service in content["services"]]
+                if len(names) != len(set(names)):
+                    raise ValueError("Duplicate service names.")
                 self.config = content
         except FileNotFoundError:
             # Throw an error if the file does not exist
@@ -113,13 +119,16 @@ class Config:
         except SchemaError as e:
             print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
-            raise Exception(f"Invalid configuration file.")
+            raise SchemaError("Invalid configuration file.")
+        except ValueError as e:
+            print(f"Invalid configuration file: {e}")
+            logger.error(f"Invalid configuration file. {e}")
+            raise ValueError("Invalid configuration file.")
         except Exception:
-            logger.error(f"Failed to read configuration file.")
-            raise Exception(f"Failed to read configuration file.")
+            logger.error("Failed to read configuration file.")
+            raise Exception("Failed to read configuration file.")
+        
 
-    def get_services(self):
-        return self.config["services"]
-
-    def get_services_keys(self):
+    @property
+    def services(self):
         return self.config["services"]

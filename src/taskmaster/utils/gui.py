@@ -243,28 +243,52 @@ class Gui:
                     i >= self._config_index["y"]
                     and i < self.height - 8 + self._config_index["y"]
                 ):
-                    if i == 0:
-                        self.win["configuration"].addstr(
-                            4 + i,
-                            4,
-                            line[
-                                self._config_index["x"] : self._config_index["x"]
-                                + self.width
-                                - 8
-                            ],
-                            curses.A_UNDERLINE,
-                        )
-                    else:
+                    if not i == 0:
                         self.win["configuration"].addstr(
                             4 + i - self._config_index["y"],
                             4,
                             line[
-                                self._config_index["x"] : self._config_index["x"]
+                                self._config_index["x"]:self._config_index["x"]
                                 + self.width
                                 - 8
                             ],
                         )
-
+            self.win["configuration"].addstr(
+                4,
+                4,
+                split_content[0][
+                    self._config_index["x"]:self._config_index["x"] + self.width - 8
+                ],
+                curses.A_UNDERLINE,
+            )
+            if (
+                self._config_index["x"] - 8 + self.width
+                < self.win_data["configuration"]["content_width"] - 8
+            ):
+                # print ">" for each line
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        self.width - 4,
+                        ">",
+                        curses.A_REVERSE,
+                    )
+            if self._config_index["x"] > 0:
+                # print "<" for each line
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        3,
+                        "<",
+                        curses.A_REVERSE,
+                    )
+            else:
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        3,
+                        " ",
+                    )
             self.win["configuration"].addstr(
                 self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate)"
             )

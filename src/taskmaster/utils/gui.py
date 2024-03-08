@@ -86,7 +86,7 @@ class Gui:
                 logger.debug(f"Screen size: {self.height}x{self.width}")
                 for window in self.win:
                     self.win[window].resize(self.height, self.width)
-                self.clear(window)
+                    self.clear(window)
                 if self.win_active == "default":
                     self.default()
                 elif self.win_active == "services":

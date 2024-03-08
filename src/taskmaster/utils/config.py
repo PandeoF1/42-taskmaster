@@ -127,7 +127,6 @@ class Config:
         except Exception:
             logger.error("Failed to read configuration file.")
             raise Exception("Failed to read configuration file.")
-        
 
     @property
     def services(self):

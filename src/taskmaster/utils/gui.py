@@ -229,6 +229,11 @@ class Gui:
             content = config_table(services)
 
             split_content = content.split("\n")
+            self.win_data["configuration"]["content_height"] = len(split_content)
+            self.win_data["configuration"]["content_width"] = 0
+            for line in split_content:
+                if len(line) > self.win_data["configuration"]["content_width"]:
+                    self.win_data["configuration"]["content_width"] = len(line)
             # Clear the window
             for i in range(self.height - 8):
                 self.win["configuration"].addstr(4 + i, 4, " " * (self.width - 6))
@@ -278,12 +283,20 @@ class Gui:
                 if self._config_index["y"] > 0:
                     self._config_index["y"] -= 1
             if key == 66:  # ↓
-                self._config_index["y"] += 1
+                if (
+                    self._config_index["y"]
+                    < self.win_data["configuration"]["content_height"] - self.height + 7
+                ):
+                    self._config_index["y"] += 1
             if key == 68:  # ←
                 if self._config_index["x"] > 0:
                     self._config_index["x"] -= 2
             if key == 67:  # →
-                self._config_index["x"] += 2
+                if (
+                    self._config_index["x"]
+                    < self.win_data["configuration"]["content_width"] - self.width
+                ):
+                    self._config_index["x"] += 2
             self.configuration()
         except curses.error as e:
             logger.error(f"[Configuration] Failed to navigate. {e}")

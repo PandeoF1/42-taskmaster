@@ -16,82 +16,82 @@ class TestConfig(unittest.TestCase):
 
     def test_valid_autorestart_always(self):
         config = Config("./tests/config_templates/valid/autorestart_always.yaml")
-        self.assertEqual(config.services[0]['autorestart'], "always")
+        self.assertEqual(config.services[0]["autorestart"], "always")
 
     def test_valid_autorestart_never(self):
         config = Config("./tests/config_templates/valid/autorestart_never.yaml")
-        self.assertEqual(config.services[0]['autorestart'], "never")
+        self.assertEqual(config.services[0]["autorestart"], "never")
 
     def test_valid_autorestart_unexpected(self):
         config = Config("./tests/config_templates/valid/autorestart_unexpected.yaml")
-        self.assertEqual(config.services[0]['autorestart'], "unexpected")
+        self.assertEqual(config.services[0]["autorestart"], "unexpected")
 
     def test_valid_autostart_false(self):
         config = Config("./tests/config_templates/valid/autostart_false.yaml")
-        self.assertEqual(config.services[0]['autostart'], False)
+        self.assertEqual(config.services[0]["autostart"], False)
 
     def test_valid_autostart_true(self):
         config = Config("./tests/config_templates/valid/autostart_true.yaml")
-        self.assertEqual(config.services[0]['autostart'], True)
+        self.assertEqual(config.services[0]["autostart"], True)
 
     def test_valid_umask_min(self):
         config = Config("./tests/config_templates/valid/umask_min.yaml")
-        self.assertEqual(config.services[0]['umask'], 0)
+        self.assertEqual(config.services[0]["umask"], 0)
 
     def test_valid_umask_max(self):
         config = Config("./tests/config_templates/valid/umask_max.yaml")
-        self.assertEqual(config.services[0]['umask'], 777)
+        self.assertEqual(config.services[0]["umask"], 777)
 
     def test_valid_numprocs_min(self):
         config = Config("./tests/config_templates/valid/numprocs_min.yaml")
-        self.assertEqual(config.services[0]['numprocs'], 1)
+        self.assertEqual(config.services[0]["numprocs"], 1)
 
     def test_valid_numprocs_max(self):
         config = Config("./tests/config_templates/valid/numprocs_max.yaml")
-        self.assertEqual(config.services[0]['numprocs'], 32)
+        self.assertEqual(config.services[0]["numprocs"], 32)
 
     def test_valid_starttime_min(self):
         config = Config("./tests/config_templates/valid/starttime_min.yaml")
-        self.assertEqual(config.services[0]['starttime'], 0)
+        self.assertEqual(config.services[0]["starttime"], 0)
 
     def test_valid_starttime_max(self):
         config = Config("./tests/config_templates/valid/starttime_max.yaml")
-        self.assertEqual(config.services[0]['starttime'], 100000000)
+        self.assertEqual(config.services[0]["starttime"], 100000000)
 
     def test_valid_startretries_min(self):
         config = Config("./tests/config_templates/valid/startretries_min.yaml")
-        self.assertEqual(config.services[0]['startretries'], 1)
+        self.assertEqual(config.services[0]["startretries"], 1)
 
     def test_valid_startretries_max(self):
         config = Config("./tests/config_templates/valid/startretries_max.yaml")
-        self.assertEqual(config.services[0]['startretries'], 10)
+        self.assertEqual(config.services[0]["startretries"], 10)
 
     def test_valid_exitcodes_min(self):
         config = Config("./tests/config_templates/valid/exitcodes_min.yaml")
-        self.assertEqual(config.services[0]['exitcodes'], [0])
+        self.assertEqual(config.services[0]["exitcodes"], [0])
 
     def test_valid_exitcodes_max(self):
         config = Config("./tests/config_templates/valid/exitcodes_max.yaml")
-        self.assertEqual(config.services[0]['exitcodes'], [255])
+        self.assertEqual(config.services[0]["exitcodes"], [255])
 
     def test_valid_name_min(self):
         config = Config("./tests/config_templates/valid/name_min.yaml")
-        self.assertEqual(config.services[0]['name'], "a")
+        self.assertEqual(config.services[0]["name"], "a")
 
     def test_valid_name_max(self):
         config = Config("./tests/config_templates/valid/name_max.yaml")
-        self.assertEqual(config.services[0]['name'], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        self.assertEqual(config.services[0]["name"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
     def test_valid_global(self):
         config = Config("./tests/config_templates/valid/global.yaml")
-        self.assertEqual(config.services[0]['umask'], 63)
-        self.assertEqual(config.services[0]['numprocs'], 8)
-        self.assertEqual(config.services[0]['starttime'], 5)
-        self.assertEqual(config.services[0]['startretries'], 3)
-        self.assertEqual(config.services[0]['exitcodes'], [0, 2])
-        self.assertEqual(config.services[0]['name'], "sleep all")
-        self.assertEqual(config.services[0]['autostart'], True)
-        self.assertEqual(config.services[0]['autorestart'], "unexpected")
+        self.assertEqual(config.services[0]["umask"], 63)
+        self.assertEqual(config.services[0]["numprocs"], 8)
+        self.assertEqual(config.services[0]["starttime"], 5)
+        self.assertEqual(config.services[0]["startretries"], 3)
+        self.assertEqual(config.services[0]["exitcodes"], [0, 2])
+        self.assertEqual(config.services[0]["name"], "sleep all")
+        self.assertEqual(config.services[0]["autostart"], True)
+        self.assertEqual(config.services[0]["autorestart"], "unexpected")
 
     def test_invalid_keys_auto(self):
         try:

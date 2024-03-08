@@ -13,10 +13,244 @@ services:
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
     stoptime: 10
-    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stdout: /tmp/sleep.stdoutsleepasleepasleepasleepasleepasleepasleepasleepasleepasleepasleepasleepa # Optionnal (if not present don't log)
     stderr: /tmp/sleep.stderr # Optionnal ("")
     # user: # Optionnal
   - name: sleepb
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepba
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbf
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbfdfds
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbggfdgdfg
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgdfgfdgdf
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgfdgfdaaaaa
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgdf
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgfd
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgfdgfdaaaaaaaaa
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgfdgfdggggggggg
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgdfgfdfffffffffff
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgdfgfdfsdfsd
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    user: gdgd # Optionnal
+
+  - name: sleepbgfdgfdgfdgfdlastlastlast
     cmd: "sleep 100"
     numprocs: 8 # min 1 max 32
     umask: 077

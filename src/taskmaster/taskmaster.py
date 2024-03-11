@@ -4,6 +4,7 @@ import sys
 import signal
 import time
 from typing import Any
+import random
 
 from .utils.logger import logger
 from .utils.gui import Gui
@@ -14,8 +15,9 @@ from .utils.config import Config
 
 # Handle ctrl c
 def signal_handler(sig: Any, frame: Any) -> None:
-    # logger.log("CTRL+C detected. Exiting...", level="WARNING")
-    # logger.close()
+    logger.log("CTRL+C detected. Exiting...", level="WARNING")
+    logger.close()
+    # Do this properly
     sys.exit(0)
 
 
@@ -24,18 +26,16 @@ def init_signal() -> None:
     signal.signal(signal.SIGINT, signal_handler)
 
 
-async def interfaces(config) -> None:
+async def interfaces(stdscr,config) -> None:
     # logger.log("Starting taskmaster.")
     try:
         interface = Gui()
         interface.config = config
         interface.default()
         while True:
+            await asyncio.sleep(0.01)
             interface.update_size()
             key = interface.win[interface.win_active].getch()
-            while key == curses.ERR:
-                time.sleep(0.01)
-                key = interface.win[interface.win_active].getch()
             if interface.win_active == "default" and interface.default_nav(key) == -1:
                 break
             elif (
@@ -52,15 +52,22 @@ async def interfaces(config) -> None:
     except Exception as e:
         logger.error(e)
 
+async def test(config: Config) -> None:
+    while True:
+        logger.info("test")
+        # edit config
+        config.services[0]['numprocs'] = random.randint(1, 100)
+        await asyncio.sleep(0.5)
+
 
 async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
-    event_loop = asyncio.get_event_loop()
-    tasks = [
-        event_loop.create_task(interfaces(config)),
-    ]
-    await asyncio.gather(*tasks)
+    # Execute interfaces and test in parallel
+    await asyncio.gather(
+        curses.wrapper(interfaces, config),
+        test(config)
+    )
     # logger.close()
 
 

@@ -101,7 +101,7 @@ class Gui:
     def clear(self, window) -> None:
         # Clear the window
         try:
-            logger.debug(f"Clearing window: {window}")
+            # logger.debug(f"Clearing window: {window}")
             self.win[window].clear()
             self.win[window].refresh()
         except curses.error as e:
@@ -110,18 +110,18 @@ class Gui:
     def box(self, windows) -> None:
         # Create a window with a box around it
         try:
-            logger.debug("Loading box.")
+            # logger.debug("Loading box.")
             self.win[windows].box(0, 0)
             self.win[windows].addstr(0, 2, " " + windows + " ")
             self.win[windows].refresh()
-            # self.win[windows].nodelay(True) # non-blocking getch
+            self.win[windows].nodelay(True) # non-blocking getch
         except curses.error as e:
             logger.error(f"Failed to load box. {e}")
 
     def default(self) -> None:
         # Default page
         try:
-            logger.debug("Loading default page.")
+            # logger.debug("Loading default page.")
             if "default" not in self.win:
                 self.win["default"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["default"] = dict()
@@ -148,7 +148,7 @@ class Gui:
     def default_nav(self, key: int) -> int:
         # Navigate through the pages
         try:
-            logger.debug(f"[Default] Key pressed: {key}")
+            # logger.debug(f"[Default] Key pressed: {key}")
             if key == 113:  # q
                 return -1
             elif key == 66:  # ↓
@@ -177,7 +177,7 @@ class Gui:
 
     def services_nav(self, key: int) -> None:
         try:
-            logger.debug(f"[Services] Key pressed: {key}")
+            # logger.debug(f"[Services] Key pressed: {key}")
             if key == 113:  # q
                 self.default()
                 self.win_data["services"]["index_y"] = 0
@@ -219,7 +219,7 @@ class Gui:
     def services(self) -> None:
         # Services page
         try:
-            logger.debug("Loading services page.")
+            # logger.debug("Loading services page.")
             if "services" not in self.win:
                 self.win["services"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["services"] = dict()
@@ -306,7 +306,7 @@ class Gui:
     def configuration(self) -> None:
         # Configuration page
         try:
-            logger.debug("Loading configuration page.")
+            # logger.debug("Loading configuration page.")
             if "configuration" not in self.win:
                 self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["configuration"] = dict()
@@ -390,7 +390,7 @@ class Gui:
 
     def config_nav(self, key: int) -> None:
         try:
-            logger.debug(f"[Configuration] Key pressed: {key}")
+            # logger.debug(f"[Configuration] Key pressed: {key}")
             if key == 113:  # q
                 self.win_data["configuration"]["index_y"] = 0
                 self.win_data["configuration"]["index_x"] = 0

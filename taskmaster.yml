@@ -13,7 +13,7 @@ services:
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
     stoptime: 10
-    stdout: /tmp/sleep.stdoutsleepasleepasleepasleepasleepasleepasleepasleepasleepasleepasleepasleepa # Optionnal (if not present don't log)
+    stdout: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal (if not present don't log)
     stderr: /tmp/sleep.stderr # Optionnal ("")
     # user: # Optionnal
   - name: sleepb

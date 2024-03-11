@@ -2,8 +2,7 @@ import curses
 from .logger import logger
 import time
 
-
-# Generate table
+# Generate config table
 def config_table(data):
     # Get the keys (column names) from the first row of data
     keys = []
@@ -43,6 +42,7 @@ class Gui:
 
     def __init__(self):
         # Initialize the screen
+
         logger.debug("Initializing screen.")
         try:
             self.stdscr = curses.initscr()
@@ -86,7 +86,7 @@ class Gui:
                 logger.debug(f"Screen size: {self.height}x{self.width}")
                 for window in self.win:
                     self.win[window].resize(self.height, self.width)
-                self.clear(window)
+                    self.clear(window)
                 if self.win_active == "default":
                     self.default()
                 elif self.win_active == "services":
@@ -180,7 +180,38 @@ class Gui:
             logger.debug(f"[Services] Key pressed: {key}")
             if key == 113:  # q
                 self.default()
+                self.win_data["services"]["index_y"] = 0
+                self.win_data["services"]["index_x"] = 0
+                self.win_data["services"]["selected_line"] = 0
                 return
+            if key == 65:  # ↑``
+                if self.win_data["services"]["selected_line"] > 0:
+                    self.win_data["services"]["selected_line"] -= 1
+                    if self.win_data["services"]["selected_line"] < self.win_data["services"]["index_y"]:
+                        self.win_data["services"]["index_y"] -= 1
+            if key == 66:  # ↓
+                # increment self.win_data["services"]["selected_line"] if it's not the last line
+                if (
+                    self.win_data["services"]["content_height"] > self.win_data["services"]["selected_line"]
+                    and
+                    self.win_data["services"]["selected_line"] + 2 < self.win_data["services"]["content_height"] - 1
+                ):
+                    self.win_data["services"]["selected_line"] += 1
+                    if self.win_data["services"]["selected_line"] + 2 > self.height - 8 + self.win_data["services"]["index_y"]:
+                        self.win_data["services"]["index_y"] += 1
+            if key == 68:  # ←
+                if self.win_data["services"]["index_x"] > 0:
+                    self.win_data["services"]["index_x"] -= 2
+            if key == 67:  # →
+                if (
+                    self.win_data["services"]["index_x"]
+                    < self.win_data["services"]["content_width"] - self.width
+                ):
+                    self.win_data["services"]["index_x"] += 2
+            if key == 10:  # Enter
+                # log selected service
+                logger.info(f"Selected service: {self.win_data['services']['selected_line']} {self.config.services[self.win_data['services']['selected_line']]['name']}")
+                
             self.services()
         except curses.error as e:
             logger.error(f"[Services] Failed to navigate. {e}")
@@ -192,22 +223,82 @@ class Gui:
             if "services" not in self.win:
                 self.win["services"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["services"] = dict()
-                self.win_data["services"]["selected"] = "service1"
+                self.win_data["services"]["selected"] = "service"
+                self.win_data["services"]["index_x"] = 0
+                self.win_data["services"]["index_y"] = 0
+                self.win_data["services"]["selected_line"] = 0
             self.win_active = "services"
             self.box("services")
             self.win["services"].addstr(3, 4, "Taskmaster - Services")
+            
+            content = config_table(self.config.services)
+            # Clear the window
+            for i in range(self.height - 8):
+                self.win["services"].addstr(4 + i, 4, " " * (self.width - 6))
+            split_content = content.split("\n")
+            self.win_data["services"]["content_height"] = len(split_content)
+            self.win_data["services"]["content_width"] = 0
+            for line in split_content:
+                if len(line) > self.win_data["services"]["content_width"]:
+                    self.win_data["services"]["content_width"] = len(line)
+            
+            for i, line in enumerate(split_content):
+                # print only from index to window width (start the print from x: 4 and y: 5, index are only where to start in the table)
+                if (
+                    i >= self.win_data["services"]["index_y"]
+                    and i < self.height - 8 + self.win_data["services"]["index_y"]
+                ):
+                    if not i == 0:
+                        self.win["services"].addstr(
+                            4 + i - self.win_data["services"]["index_y"],
+                            4,
+                            line[
+                                self.win_data["services"]["index_x"] : self.win_data["services"]["index_x"]
+                                + self.width
+                                - 8
+                            ],
+                            curses.A_REVERSE if self.win_data["services"]["selected_line"] + 1 == i else 0,
+                        )
             self.win["services"].addstr(
-                self.height - 3, 4, "Press 'q' to go back. - (↑•↓ to navigate)"
+                4,
+                4,
+                split_content[0][
+                    self.win_data["services"]["index_x"] : self.win_data["services"]["index_x"] + self.width - 8
+                ],
+                curses.A_UNDERLINE,
             )
+            if (
+                self.win_data["services"]["index_x"] - 8 + self.width
+                < len(content[0]) - 8
+            ):
+                # print ">" for each line
+                for i in range(self.height - 8):
+                    self.win["services"].addstr(
+                        4 + i,
+                        self.width - 4,
+                        ">",
+                        curses.A_REVERSE,
+                    )
+            if self.win_data["services"]["index_x"] > 0:
+                # print "<" for each line
+                for i in range(self.height - 8):
+                    self.win["services"].addstr(
+                        4 + i,
+                        3,
+                        "<",
+                        curses.A_REVERSE,
+                    )
+            else:
+                for i in range(self.height - 8):
+                    self.win["services"].addstr(
+                        4 + i,
+                        3,
+                        " ",
+                    )
 
-            # | name | status | pid | uptime | restarts | exit code
-            self.win["services"].addstr(5, 4, "Name", curses.A_UNDERLINE)
-            self.win["services"].addstr(5, 15, "Status", curses.A_UNDERLINE)
-            self.win["services"].addstr(5, 25, "PID", curses.A_UNDERLINE)
-            self.win["services"].addstr(5, 35, "Uptime", curses.A_UNDERLINE)
-            self.win["services"].addstr(5, 45, "Restarts", curses.A_UNDERLINE)
-            self.win["services"].addstr(5, 55, "Exit code", curses.A_UNDERLINE)
-
+            self.win["services"].addstr(
+                self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate)"
+            )
             self.win["services"].refresh()
         except curses.error as e:
             logger.error(f"Failed to load services page. {e}")
@@ -219,48 +310,77 @@ class Gui:
             if "configuration" not in self.win:
                 self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["configuration"] = dict()
-                self.win_data["configuration"]["selected"] = "config1"
-                self._config_index = {"x": 0, "y": 0}
+                self.win_data["configuration"]["selected"] = "config"
+                self.win_data["configuration"]["index_x"] = 0
+                self.win_data["configuration"]["index_y"] = 0
             self.win_active = "configuration"
             self.box("configuration")
             self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
 
-            services = self.config.get_services()
+            services = self.config.services
             content = config_table(services)
 
             split_content = content.split("\n")
+            self.win_data["configuration"]["content_height"] = len(split_content)
+            self.win_data["configuration"]["content_width"] = 0
+            for line in split_content:
+                if len(line) > self.win_data["configuration"]["content_width"]:
+                    self.win_data["configuration"]["content_width"] = len(line)
             # Clear the window
             for i in range(self.height - 8):
                 self.win["configuration"].addstr(4 + i, 4, " " * (self.width - 6))
             for i, line in enumerate(split_content):
                 # print only from index to window width (start the print from x: 4 and y: 5, index are only where to start in the table)
                 if (
-                    i >= self._config_index["y"]
-                    and i < self.height - 8 + self._config_index["y"]
+                    i >= self.win_data["configuration"]["index_y"]
+                    and i < self.height - 8 + self.win_data["configuration"]["index_y"]
                 ):
-                    if i == 0:
-                        logger.info("???")
+                    if not i == 0:
                         self.win["configuration"].addstr(
-                            4 + i,
+                            4 + i - self.win_data["configuration"]["index_y"],
                             4,
                             line[
-                                self._config_index["x"] : self._config_index["x"]
-                                + self.width
-                                - 8
-                            ],
-                            curses.A_UNDERLINE,
-                        )
-                    else:
-                        self.win["configuration"].addstr(
-                            4 + i - self._config_index["y"],
-                            4,
-                            line[
-                                self._config_index["x"] : self._config_index["x"]
+                                self.win_data["configuration"]["index_x"] : self.win_data["configuration"]["index_x"]
                                 + self.width
                                 - 8
                             ],
                         )
-
+            self.win["configuration"].addstr(
+                4,
+                4,
+                split_content[0][
+                    self.win_data["configuration"]["index_x"] : self.win_data["configuration"]["index_x"] + self.width - 8
+                ],
+                curses.A_UNDERLINE,
+            )
+            if (
+                self.win_data["configuration"]["index_x"] - 8 + self.width
+                < self.win_data["configuration"]["content_width"] - 8
+            ):
+                # print ">" for each line
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        self.width - 4,
+                        ">",
+                        curses.A_REVERSE,
+                    )
+            if self.win_data["configuration"]["index_x"] > 0:
+                # print "<" for each line
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        3,
+                        "<",
+                        curses.A_REVERSE,
+                    )
+            else:
+                for i in range(self.height - 8):
+                    self.win["configuration"].addstr(
+                        4 + i,
+                        3,
+                        " ",
+                    )
             self.win["configuration"].addstr(
                 self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate)"
             )
@@ -272,19 +392,28 @@ class Gui:
         try:
             logger.debug(f"[Configuration] Key pressed: {key}")
             if key == 113:  # q
-                self._config_index = {"x": 0, "y": 0}
+                self.win_data["configuration"]["index_y"] = 0
+                self.win_data["configuration"]["index_x"] = 0
                 self.default()
                 return
-            if key == 65:  # ↑
-                if self._config_index["y"] > 0:
-                    self._config_index["y"] -= 1
+            if key == 65:  # ↑``
+                if self.win_data["configuration"]["index_y"] > 0:
+                    self.win_data["configuration"]["index_y"] -= 1
             if key == 66:  # ↓
-                self._config_index["y"] += 1
+                if (
+                    self.win_data["configuration"]["index_y"]
+                    < self.win_data["configuration"]["content_height"] - self.height + 7
+                ):
+                    self.win_data["configuration"]["index_y"] += 1
             if key == 68:  # ←
-                if self._config_index["x"] > 0:
-                    self._config_index["x"] -= 2
+                if self.win_data["configuration"]["index_x"] > 0:
+                    self.win_data["configuration"]["index_x"] -= 2
             if key == 67:  # →
-                self._config_index["x"] += 2
+                if (
+                    self.win_data["configuration"]["index_x"]
+                    < self.win_data["configuration"]["content_width"] - self.width
+                ):
+                    self.win_data["configuration"]["index_x"] += 2
             self.configuration()
         except curses.error as e:
             logger.error(f"[Configuration] Failed to navigate. {e}")
@@ -296,7 +425,7 @@ class Gui:
             if "configuration" not in self.win:
                 self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
                 self.win_data["configuration"] = dict()
-                self.win_data["configuration"]["selected"] = "config1"
+                self.win_data["configuration"]["selected"] = "config"
             self.win_active = "configuration"
             self.box("configuration")
             self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")

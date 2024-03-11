@@ -1,0 +1,18 @@
+services:
+  - _name: sleep
+    cmd: "sleep 100"
+    numprocs: 8 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1 # On verra si on fait un template des sigevent
+    stoptime: 10
+    stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
+    stderr: /tmp/sleep.stderr # Optionnal ("")
+    # user: # Optionnal

@@ -1,46 +1,9 @@
 import yaml
 from .logger import logger
 from cerberus import Validator, SchemaError
-from enum import Enum
 
 
-class AutoRestart(Enum):
-    """
-    Enumeration for auto restart options.
-
-    Options:
-    - ALWAYS: Always restart the service.
-    - NEVER: Never restart the service.
-    - UNEXPECTED: Restart the service only if it terminates unexpectedly.
-    """
-
-    ALWAYS = "always"
-    NEVER = "never"
-    UNEXPECTED = "unexpected"
-
-
-class Signal(Enum):
-    """
-    Enumeration for signals.
-
-    Options:
-    - USR1: User-defined signal 1.
-    - USR2: User-defined signal 2.
-    - INT: Interrupt signal.
-    - TERM: Terminate signal.
-    - HUP: Hangup signal.
-    - QUIT: Quit signal.
-    """
-
-    USR1 = 10
-    USR2 = 12
-    INT = 2
-    TERM = 15
-    HUP = 1
-    QUIT = 3
-
-
-def validate_dict(data: dict, template: dict) -> str | None:
+def validate_dict(data: dict, template: dict) -> bool:
     for key, expected_type in template.items():
         if not len(data) == len(template):
             return "Invalid number of keys."
@@ -61,6 +24,8 @@ schema = {
                 "name": {
                     "type": "string",
                     "required": True,
+                    "maxlength": 32,
+                    "minlength": 1,
                 },
                 "cmd": {
                     "type": "string",
@@ -89,7 +54,7 @@ schema = {
                 "autorestart": {
                     "type": "string",
                     "required": True,
-                    "allowed": [e.value for e in AutoRestart],
+                    "allowed": ["unexpected", "always", "never"],
                 },
                 "exitcodes": {
                     "type": "list",
@@ -98,7 +63,7 @@ schema = {
                 },
                 "startretries": {
                     "type": "integer",
-                    "min": 0,
+                    "min": 1,
                     "max": 10,
                     "required": True,
                 },
@@ -106,7 +71,7 @@ schema = {
                 "stopsignal": {
                     "type": "string",
                     "required": True,
-                    "allowed": [e.name for e in Signal],
+                    "allowed": ["TERM", "HUP", "INT", "QUIT", "KILL", "USR1", "USR2"],
                 },
                 "stoptime": {
                     "type": "integer",
@@ -135,13 +100,17 @@ class Config:
     A class to handle the configuration file for Taskmaster.
     """
 
-    def __init__(self):
+    def __init__(self, path="taskmaster.yml"):
         # Try to open if it exists `taskmaster.yml`
         try:
-            with open("taskmaster.yml", "r") as file:
+            with open(path, "r") as file:
                 content = yaml.safe_load(file)
                 if not validator.validate(content):
                     raise SchemaError(validator.errors)
+                # Check if duplicate name
+                names = [service["name"] for service in content["services"]]
+                if len(names) != len(set(names)):
+                    raise ValueError("Duplicate service names.")
                 self.config = content
         except FileNotFoundError:
             # Throw an error if the file does not exist
@@ -150,13 +119,15 @@ class Config:
         except SchemaError as e:
             print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
-            raise Exception("Invalid configuration file.")
+            raise SchemaError("Invalid configuration file.")
+        except ValueError as e:
+            print(f"Invalid configuration file: {e}")
+            logger.error(f"Invalid configuration file. {e}")
+            raise ValueError("Invalid configuration file.")
         except Exception:
             logger.error("Failed to read configuration file.")
             raise Exception("Failed to read configuration file.")
 
-    def get_services(self):
-        return self.config["services"]
-
-    def get_services_keys(self):
+    @property
+    def services(self):
         return self.config["services"]

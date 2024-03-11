@@ -25,8 +25,8 @@ def init_signal() -> None:
 
 
 async def interfaces(config) -> None:
+    # logger.log("Starting taskmaster.")
     try:
-        # logger.log("Starting taskmaster.")
         interface = Gui()
         interface.config = config
         interface.default()
@@ -50,9 +50,7 @@ async def interfaces(config) -> None:
         # Stop all services
         interface.end()
     except Exception as e:
-        # logger.log(f"An error occurred: {e}", level="ERROR")
-        # logger.close()
-        sys.exit(1)
+        logger.error(e)
 
 
 async def taskmaster(config: Config) -> None:

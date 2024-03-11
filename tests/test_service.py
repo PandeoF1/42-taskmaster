@@ -1,7 +1,7 @@
 import unittest
 
 # from unittest.mock import MagicMock
-from src.taskmaster.service import ServiceHandler, ServiceHandlerConfig
+from src.taskmaster.service import ServiceHandler
 
 
 class TestService(unittest.TestCase):
@@ -44,19 +44,16 @@ class TestService(unittest.TestCase):
 
     def test_config_getter(self):
         config = self.service.config
-        self.assertIsInstance(config, ServiceHandlerConfig)
+        self.assertIsInstance(config, ServiceHandler.Config)
         self.assertEqual(dict(config), self.service_config)
 
     def test_config_setter(self):
         self.service_config["services"][0]["cmd"] = "echo 'fake command'"
         self.service.config = self.service_config
         self.assertEqual(
-            dict(self.service.config), dict(ServiceHandlerConfig(**self.service_config))
+            dict(self.service.config),
+            dict(ServiceHandler.Config(**self.service_config)),
         )
 
     def test_start(self):
         pass
-
-
-if __name__ == "__main__":
-    unittest.main()

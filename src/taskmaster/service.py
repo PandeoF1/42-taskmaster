@@ -4,7 +4,6 @@ from typing import List, Dict, Any, Optional
 import subprocess
 from enum import Enum
 import time
-import asyncio
 
 from .utils.logger import logger
 from .utils.config import Signal, AutoRestart
@@ -30,9 +29,9 @@ class SubProcess:
     def __init__(
         self,
         parent_name: str,
-        cmd: str | None = None,
-        umask: int | None = None,
-        workingdir: str | None = None,
+        cmd: str,
+        umask: int,
+        workingdir: str,
         stdout: int | TextIOWrapper = subprocess.DEVNULL,
         stderr: int | TextIOWrapper = subprocess.DEVNULL,
         user: str | None = None,
@@ -50,6 +49,14 @@ class SubProcess:
         self._state: SubProcess.State = self.State.STOPPED
         self._retries: int = 0
 
+    def __del__(self) -> None:
+        """
+        Destructor for the SubProcess class.
+        """
+        if self._process is not None:
+            self._process.kill()
+            self._process.wait()
+
     @property
     def state(self) -> State:
         """
@@ -57,7 +64,7 @@ class SubProcess:
         """
         return self._state
 
-    def start(self, retries: int) -> State:
+    def start(self, retries: int, starttime: int) -> State:
         """
         Starts the subprocess.
 
@@ -65,12 +72,16 @@ class SubProcess:
         adding one second each time. So if you set startretries=3, taskmaster will wait one,
         two and then three seconds between each restart attempt, for a total of 5 seconds.
         """
-        if self._process is not None:
-            raise RuntimeError("Process is already running.")
+        if self._process and self._process.poll() is None:
+            logger.warning(
+                f"Process {self._parent_name}-{self._process.pid} is already running."
+            )
+            return self.state
 
         success: bool = False
+        self._retries = 0
 
-        while not success and retries > 0:
+        while not success:
             try:
                 if self._cmd is None:
                     raise ValueError("Command is not provided.")
@@ -84,58 +95,93 @@ class SubProcess:
                     user=self._user,
                 )
                 self._state = self.State.STARTING
-                success = True
                 logger.info(
-                    f"Started process: {self._parent_name} with pid: {self._process.pid}"
+                    f"Starting process: {self._parent_name} with pid: {self._process.pid}"
                 )
-            except subprocess.SubprocessError:
-                logger.error(f"Failed to start process {self._parent_name}")
-                logger.info(f"Retrying to start process: {self._parent_name}")
-                logger.info(f"Retries left: {retries}")
+
+                for _ in range(starttime * 10):
+                    if self._process.poll() is not None:
+                        break
+                    time.sleep(0.1)
+                if self._process.poll() is None:
+                    logger.info(
+                        f"Process {self._parent_name}-{self._process.pid} is now running."
+                    )
+                    self._state = self.State.RUNNING
+                    success = True
+                else:
+                    logger.error(
+                        f"Process {self._parent_name}-{self._process.pid} has exited before {starttime}."
+                    )
+
+            except Exception as e:
                 retries -= 1
                 self._retries += 1
                 self._state = self.State.BACKOFF
+                logger.error(f"Failed to start process {self._parent_name}")
+                logger.debug(e)
+
+            if retries <= 0 or success:
+                break
+
+            logger.info(
+                f"Retrying to start process {self._parent_name} in {self._retries} seconds."
+            )
+            logger.info(f"Retries left: {retries}")
+            time.sleep(self._retries + 1)
+            # asyncio.sleep(self._retries + 1)
+
+        if not success:
+            self._state = self.State.FATAL
 
         return self.state
 
-    async def wait(
-        self,
-        starttime: int,
-    ) -> State:
+    def wait(self) -> State:
         """
         Waits for the subprocess to finish.
+
+        Assumes the subprocess is already running.
         """
-        if self._process is None:
+
+        if self._process is None or self._state != self.State.RUNNING:
+            logger.debug(f"Process {self._parent_name} is not running.")
             raise RuntimeError("Process is not running.")
 
-        await asyncio.sleep(starttime)
-
-        if self._process.poll() is None:
-            self._state = self.State.RUNNING
-        else:
-            self._state = self.State.FATAL
-
+        logger.debug(
+            f"Waiting for process {self._parent_name}-{self._process.pid} to finish."
+        )
         self._process.wait()
+        logger.debug(f"Process {self._parent_name}-{self._process.pid} exited.")
         self._state = self.State.EXITED
         return self.state
 
     def stop(self, stopsignal: Signal, stoptime: int) -> State:
         """
         Tries to stop the program using the given signal.
-        If the program is not stopped after stoptime seconds, the program will be killed
+        If the program is not stopped after stoptime seconds, the process will be killed
         """
         if self._process is None:
             raise RuntimeError("Process is not running.")
 
         self._process.send_signal(stopsignal.value)
         self._state = self.State.STOPPING
-        time.sleep(stoptime)
-        if not self._process.returncode:
+        for _ in range(stoptime * 10):
+            time.sleep(0.1)
+            if self._process.poll():
+                break
+        if not self._process.poll():
             self._process.kill()
-        self._state = self.State.EXITED
+        print(f"Return codes: {self._process.poll()}")
+        self._state = self.State.STOPPED
         return self.state
 
-    def autorestart(self, exitcodes: List[int], retries: int) -> State:
+    def autorestart(
+        self,
+        exitcodes: List[int],
+        retries: int,
+        starttime: int,
+        autorestart: AutoRestart,
+    ) -> State:
         """
         Restarts the subprocess.
 
@@ -149,8 +195,20 @@ class SubProcess:
         if self._process is None:
             raise RuntimeError("Process is not running.")
 
-        if self._state == self.State.EXITED and self._process.returncode in exitcodes:
-            self.start(retries)
+        if self.state != self.State.EXITED:
+            logger.warning(
+                f"Process {self._parent_name} with pid {self._process.pid} is not exited."
+            )
+            return self.state
+
+        if (
+            self._process.returncode not in exitcodes
+            and autorestart == AutoRestart.UNEXPECTED
+        ) or autorestart == AutoRestart.ALWAYS:
+            logger.info(
+                f"Restarting process {self._parent_name} with pid: {self._process.pid}"
+            )
+            self.start(retries=retries, starttime=starttime)
         return self.state
 
 
@@ -214,10 +272,10 @@ class Service:
         """
         Destructor for the Program class.
         """
-        if self.stdout != subprocess.DEVNULL:
+        if type(self.stdout) is TextIOWrapper:
             self.stdout.close()
 
-        if self.stderr != subprocess.DEVNULL:
+        if type(self.stderr) is TextIOWrapper:
             self.stderr.close()
 
     def _init_stdout(self) -> None:
@@ -227,7 +285,8 @@ class Service:
         self.stdout: int | TextIOWrapper = subprocess.DEVNULL
 
         try:
-            self.stdout = open(self._config.stdout, "w")
+            if self._config.stdout is not None:
+                self.stdout = open(self._config.stdout, "w")
         except IOError:
             logger.warning(
                 f"Failed to open stdout file: {self._config.stdout} - Defaulting to DEVNULL."
@@ -240,7 +299,8 @@ class Service:
         self.stderr: int | TextIOWrapper = subprocess.DEVNULL
 
         try:
-            self.stderr = open(self._config.stderr, "w")
+            if self._config.stderr is not None:
+                self.stderr = open(self._config.stderr, "w")
         except IOError:
             logger.warning(
                 f"Failed to open stderr file: {self._config.stderr} - Defaulting to DEVNULL."
@@ -278,8 +338,6 @@ class Service:
         Starts the service.
         """
         pass
-        # for _ in range(self._config.numprocs):
-        #     self._start_process()
 
     def stop(self) -> None:
         """
@@ -330,7 +388,7 @@ class ServiceHandler:
         Args:
             **config: The configuration parameters for the service handler.
         """
-        self._config: self.Config = self.Config(**config)
+        self._config: ServiceHandler.Config = self.Config(**config)
         self._services: List[Service] = []
 
     def status(self):

@@ -84,6 +84,8 @@ services:
     starttime: 5
     stopsignal: USR1
     stoptime: 10
+    env: # Optionnal
+      test: "test"
     stdout: ./taskmaster.yml # Optionnal (if not present don't log)
     stderr: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal
     # user: aaaaa # Optionnal (Downgrade privileges)

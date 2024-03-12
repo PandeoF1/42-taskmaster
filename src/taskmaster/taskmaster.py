@@ -2,7 +2,7 @@ import curses
 import asyncio
 import sys
 import signal
-import time
+import argparse
 from typing import Any
 import random
 
@@ -72,9 +72,15 @@ async def services(config: Config) -> None:
     pass
 
 
+
+
 def main() -> None:
     try:
-        config = Config()
+        # Parse -f for the config path
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-f", "--file", help="Path to the configuration file")
+        args = parser.parse_args()
+        config = Config(args.file if args.file else "taskmaster.yml")
     except Exception as e:
         interface = Gui()
         interface.configuration_error(e)

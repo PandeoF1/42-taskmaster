@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/PandeoF1/42-taskmaster">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="https://raw.githubusercontent.com/PandeoF1/42-taskmaster/main/images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">42 - Taskmaster</h3>

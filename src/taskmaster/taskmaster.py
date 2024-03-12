@@ -32,7 +32,7 @@ async def interfaces(stdscr, config) -> None:
         interface.config = config
         interface.default()
         while True:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.)
             interface.update_size()
             key = interface.win[interface.win_active].getch()
             stop = interface.default_nav(key)
@@ -76,7 +76,6 @@ async def services(config: Config) -> None:
 
 def main() -> None:
     try:
-        # Parse -f for the config path
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--file", help="Path to the configuration file")
         args = parser.parse_args()

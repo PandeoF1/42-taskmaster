@@ -3,6 +3,7 @@ import curses
 from ..utils.logger import logger
 import time
 
+
 def log(self, log: LogReader = None) -> None:
     try:
         if "log" not in self.win:
@@ -38,7 +39,13 @@ def log(self, log: LogReader = None) -> None:
                 self.win["log"].addstr(
                     4 + i - self.win_data["log"]["index_y"],
                     4,
-                    line[self.win_data["log"]["index_x"] : self.win_data["log"]["index_x"] + self.width - 8],
+                    line[
+                        self.win_data["log"]["index_x"] : self.win_data["log"][
+                            "index_x"
+                        ]
+                        + self.width
+                        - 8
+                    ],
                 )
         if (
             self.win_data["log"]["index_x"] - 8 + self.width
@@ -74,10 +81,11 @@ def log(self, log: LogReader = None) -> None:
             f"Press 'q' to go back. - (↑•↓•←•→ to navigate) {log._start}",
         )
         self.box("log")
-        
+
         self.win["log"].refresh()
     except curses.error as e:
         logger.error(f"Failed to load log page. {e}")
+
 
 def log_nav(self, key: int) -> None:
     # Navigate through the log
@@ -90,14 +98,14 @@ def log_nav(self, key: int) -> None:
             self.win_data["log"]["index_x"] = 0
             self.services()
             return 0
-        if key == 65: # ↑
+        if key == 65:  # ↑
             self.win_data["log"]["LogReader"].down()
-        if key == 66: # ↓
+        if key == 66:  # ↓
             self.win_data["log"]["LogReader"].up()
-        if key == 68: # ←
+        if key == 68:  # ←
             if self.win_data["log"]["index_x"] > 0:
                 self.win_data["log"]["index_x"] -= 2
-        if key == 67: # →
+        if key == 67:  # →
             if (
                 self.win_data["log"]["index_x"]
                 < self.win_data["log"]["content_width"] - self.width + 8
@@ -106,6 +114,7 @@ def log_nav(self, key: int) -> None:
         self.log()
     except curses.error as e:
         logger.error(f"[Log] Failed to navigate. {e}")
+
 
 def log_not_found(self, path: str) -> None:
     # Log not found page

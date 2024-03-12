@@ -3,6 +3,7 @@ from .table import table
 from ..utils.logger import logger
 from ..utils.log_reader import LogReader
 
+
 def services(self) -> None:
     # Services page
     try:
@@ -62,10 +63,7 @@ def services(self) -> None:
             ],
             curses.A_UNDERLINE,
         )
-        if (
-            self.win_data["services"]["index_x"] - 8 + self.width
-            < len(content[0]) - 8
-        ):
+        if self.win_data["services"]["index_x"] - 8 + self.width < len(content[0]) - 8:
             # print ">" for each line
             for i in range(self.height - 8):
                 self.win["services"].addstr(
@@ -91,7 +89,9 @@ def services(self) -> None:
                     " ",
                 )
         self.win["services"].addstr(
-            self.height - 3, 4, "Press 'q' to go back. - (↑•↓•←•→ to navigate, e to open stderr, o to open stdout)"
+            self.height - 3,
+            4,
+            "Press 'q' to go back. - (↑•↓•←•→ to navigate, e to open stderr, o to open stdout)",
         )
         self.win["services"].refresh()
     except curses.error as e:
@@ -137,7 +137,7 @@ def services_nav(self, key: int) -> None:
         if key == 67:  # →
             if (
                 self.win_data["services"]["index_x"]
-                < self.win_data["services"]["content_width"] - self.width + 8 
+                < self.win_data["services"]["content_width"] - self.width + 8
             ):
                 self.win_data["services"]["index_x"] += 2
         try:
@@ -177,4 +177,3 @@ def services_nav(self, key: int) -> None:
         self.services()
     except curses.error as e:
         logger.error(f"[Services] Failed to navigate. {e}")
-

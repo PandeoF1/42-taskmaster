@@ -8,7 +8,7 @@ def _init_logger() -> None:
     os.makedirs(os.path.dirname(os.path.abspath(LOG_FILE)), exist_ok=True)
     if not os.path.exists(LOG_FILE):
         open(LOG_FILE, "w").close()
-    
+
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     handler = logging.FileHandler(LOG_FILE)

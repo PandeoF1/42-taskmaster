@@ -17,7 +17,7 @@ keys = [
     "stoptime",
     "stdout",
     "stderr",
-    "user"
+    "user",
 ]
 
 schema = {
@@ -131,7 +131,7 @@ class Config:
                         _service[key] = service[key]
                     _services.append(_service)
                     # sorted(_service.items(), key=lambda x: x[0])
-                
+
                 content["services"] = [dict(service) for service in _services]
                 self.config = content
         except FileNotFoundError:

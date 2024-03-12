@@ -3,6 +3,7 @@ from .table import table
 from ..utils.logger import logger
 import time
 
+
 def configuration(self) -> None:
     # Configuration page
     try:
@@ -38,9 +39,9 @@ def configuration(self) -> None:
                         4 + i - self.win_data["configuration"]["index_y"],
                         4,
                         line[
-                            self.win_data["configuration"][
-                                "index_x"
-                            ] : self.win_data["configuration"]["index_x"]
+                            self.win_data["configuration"]["index_x"] : self.win_data[
+                                "configuration"
+                            ]["index_x"]
                             + self.width
                             - 8
                         ],

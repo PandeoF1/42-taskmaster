@@ -19,9 +19,7 @@ def default(self) -> None:
                     5 + i, 6, f"{i + 1}. {page.capitalize()}", curses.A_REVERSE
                 )
             else:
-                self.win["default"].addstr(
-                    5 + i, 6, f"{i + 1}. {page.capitalize()}"
-                )
+                self.win["default"].addstr(5 + i, 6, f"{i + 1}. {page.capitalize()}")
         self.win["default"].addstr(
             self.height - 3, 4, "Press 'q' to quit. - (↑•↓ to navigate)"
         )

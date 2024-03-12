@@ -27,7 +27,6 @@ class LogReader:
         log_level: str = "DEBUG",
         size: int = 20,
     ) -> None:
-
         self._log_file = open(log_file, "r")
         self._log_level = log_level
         self._start = 0
@@ -158,7 +157,7 @@ class LogReader:
 
         """
         return self._stay_end
-    
+
     @stay_end.setter
     def stay_end(self, value: bool) -> None:
         """

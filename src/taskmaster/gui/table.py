@@ -1,5 +1,6 @@
 from ..utils.logger import logger
 
+
 # Generate config table
 def table(data):
     # Get the keys (column names) from the first row of data
@@ -17,7 +18,7 @@ def table(data):
     for row in data:
         for i, value in enumerate(row.values()):
             max_widths[i] = max(max_widths[i], len(str(value)))
-    
+
     content = ""
     # Print the header
     for i, key in enumerate(keys):

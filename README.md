@@ -56,7 +56,7 @@ or use the devcontainer provided in the repository.
 
 ## Usage
 
-* Without arguments
+* Without arguments (load taskmaster.yml from current directory)
     ```sh
     taskmaster
     ```

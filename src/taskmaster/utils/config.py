@@ -15,6 +15,7 @@ keys = [
     "starttime",
     "stopsignal",
     "stoptime",
+    "env",
     "stdout",
     "stderr",
     "user",
@@ -84,6 +85,9 @@ schema = {
                     "min": 0,
                     "required": True,
                 },
+                "env": {
+                    "type": "dict",
+                },
                 "stdout": {
                     "type": "string",
                 },
@@ -125,6 +129,7 @@ class Config:
                     service.setdefault("stdout", "")
                     service.setdefault("stderr", "")
                     service.setdefault("user", "")
+                    service.setdefault("env", {})
                     # range key in this order : name, cmd, numprocs, umask, workingdir, autostart, autorestart, exitcodes, startretries, starttime, stopsignal, stoptime, stdout, stderr, user
                     _service = dict()
                     for key in keys:

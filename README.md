@@ -69,6 +69,13 @@ or use the devcontainer provided in the repository.
 ## Configuration file
 
 ```yaml
+email:  # Optionnal
+ to: ""
+ smtp_email: ""
+ smtp_password: ""
+ smtp_server: "smtp.gmail.com"
+ smtp_port: 465
+
 services:
   - name: sleep
     cmd: "sleep 100"

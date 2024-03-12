@@ -1,3 +1,10 @@
+# email:
+#  to: ""
+#  smtp_email: ""
+#  smtp_password: ""
+#  smtp_server: "smtp.gmail.com"
+#  smtp_port: 465
+
 services: # ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
   - cmd: sleepa
     name: "sleep 100aaaaa"

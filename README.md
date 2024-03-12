@@ -29,7 +29,7 @@ Create a virtual environment using the following command:
   python3 -m venv venv && source venv/bin/activate
   ```
 
-* pipenv
+* pip
   ```sh 
   pip install -r requirements.txt
   ```
@@ -64,7 +64,10 @@ or use the devcontainer provided in the repository.
     ```sh
     taskmaster -f /path/to/config.yml
     ```
-
+* Without install
+    ```sh
+    python -m src.taskmaster.taskmaster
+    ```
 
 ## Configuration file
 

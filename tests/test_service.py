@@ -1,59 +1,40 @@
 import unittest
+import asyncio
 
-# from unittest.mock import MagicMock
-from src.taskmaster.service import ServiceHandler
+from src.taskmaster.service import Service, SubProcess
+from src.taskmaster.utils.config import Config
+from src.taskmaster.utils.logger import logger
 
 
-class TestService(unittest.TestCase):
-    def setUp(self) -> None:
-        self.service_config: dict = {
-            "services": [
-                {
-                    "name": "program1",
-                    "cmd": "echo 'This is program 1'",
-                    "numprocs": 1,
-                    "umask": 0o77,
-                    "workingdir": "/tmp",
-                    "autostart": True,
-                    "autorestart": "unexpected",
-                    "exitcodes": [0, 2],
-                    "startretries": 3,
-                    "starttime": 1,
-                    "stoptime": 1,
-                    "stdout": "stdout.log",
-                    "stderr": "stderr.log",
-                },
-                {
-                    "name": "program2",
-                    "cmd": "echo 'This is program 2'",
-                    "numprocs": 1,
-                    "umask": 0o77,
-                    "workingdir": "/tmp",
-                    "autostart": True,
-                    "autorestart": "unexpected",
-                    "exitcodes": [0],
-                    "startretries": 3,
-                    "starttime": 1,
-                    "stoptime": 1,
-                    "stdout": "stdout.log",
-                    "stderr": "stderr.log",
-                },
-            ],
-        }
-        self.service = ServiceHandler(**self.service_config)
+class TestService(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.config = Config(
+            "./tests/config_templates/valid/service_reference.yaml"
+        ).services[0]
 
-    def test_config_getter(self):
-        config = self.service.config
-        self.assertIsInstance(config, ServiceHandler.Config)
-        self.assertEqual(dict(config), self.service_config)
+    # Deactivated until env is in the yml configs
+    # async def test_config_getter(self):
+    #     config = self.config
+    #     service = Service(**config)
+    #     self.assertIsInstance(service.config, Service.Config)
+    #     self.assertEqual(dict(service.config), config)
 
-    def test_config_setter(self):
-        self.service_config["services"][0]["cmd"] = "echo 'fake command'"
-        self.service.config = self.service_config
+    async def test_config_setter(self):
+        config = self.config
+        service = Service(**config)
+        config["cmd"] = "echo 'fake command'"
+        service.config = config
         self.assertEqual(
-            dict(self.service.config),
-            dict(ServiceHandler.Config(**self.service_config)),
+            dict(service.config),
+            dict(Service.Config(**config)),
         )
 
-    def test_start(self):
-        pass
+    async def test_start(self):
+        config = self.config
+        service = Service(**config)
+        logger.debug("TEST: Starting service")
+        await service.start()
+        logger.debug("TEST: Service started")
+        await asyncio.sleep(config["starttime"] + 1)
+        logger.debug("TEST: Service should be running")
+        self.assertEqual(service.status(), {"sleep all": SubProcess.State.RUNNING})

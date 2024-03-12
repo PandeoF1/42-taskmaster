@@ -1,9 +1,8 @@
 from io import TextIOWrapper
-from multiprocessing import Pool
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Self
 import subprocess
 from enum import Enum
-import time
+import asyncio
 
 from .utils.logger import logger
 from .utils.config import Signal, AutoRestart
@@ -30,8 +29,8 @@ class SubProcess:
         self,
         parent_name: str,
         cmd: str,
-        umask: int,
-        workingdir: str,
+        umask: int | None,
+        workingdir: str | None,
         stdout: int | TextIOWrapper = subprocess.DEVNULL,
         stderr: int | TextIOWrapper = subprocess.DEVNULL,
         user: str | None = None,
@@ -64,7 +63,7 @@ class SubProcess:
         """
         return self._state
 
-    def start(self, retries: int, starttime: int) -> State:
+    async def start(self, retries: int, starttime: int) -> Self:
         """
         Starts the subprocess.
 
@@ -76,7 +75,7 @@ class SubProcess:
             logger.warning(
                 f"Process {self._parent_name}-{self._process.pid} is already running."
             )
-            return self.state
+            return self
 
         success: bool = False
         self._retries = 0
@@ -102,7 +101,7 @@ class SubProcess:
                 for _ in range(starttime * 10):
                     if self._process.poll() is not None:
                         break
-                    time.sleep(0.1)
+                    await asyncio.sleep(0.1)
                 if self._process.poll() is None:
                     logger.info(
                         f"Process {self._parent_name}-{self._process.pid} is now running."
@@ -128,15 +127,14 @@ class SubProcess:
                 f"Retrying to start process {self._parent_name} in {self._retries} seconds."
             )
             logger.info(f"Retries left: {retries}")
-            time.sleep(self._retries + 1)
-            # asyncio.sleep(self._retries + 1)
+            await asyncio.sleep(self._retries + 1)
 
         if not success:
             self._state = self.State.FATAL
 
-        return self.state
+        return self
 
-    def wait(self) -> State:
+    def wait(self) -> Self:
         """
         Waits for the subprocess to finish.
 
@@ -153,9 +151,9 @@ class SubProcess:
         self._process.wait()
         logger.debug(f"Process {self._parent_name}-{self._process.pid} exited.")
         self._state = self.State.EXITED
-        return self.state
+        return self
 
-    def stop(self, stopsignal: Signal, stoptime: int) -> State:
+    async def stop(self, stopsignal: Signal, stoptime: int) -> Self:
         """
         Tries to stop the program using the given signal.
         If the program is not stopped after stoptime seconds, the process will be killed
@@ -166,22 +164,21 @@ class SubProcess:
         self._process.send_signal(stopsignal.value)
         self._state = self.State.STOPPING
         for _ in range(stoptime * 10):
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             if self._process.poll():
                 break
         if not self._process.poll():
             self._process.kill()
-        print(f"Return codes: {self._process.poll()}")
         self._state = self.State.STOPPED
-        return self.state
+        return self
 
-    def autorestart(
+    async def autorestart(
         self,
         exitcodes: List[int],
         retries: int,
         starttime: int,
         autorestart: AutoRestart,
-    ) -> State:
+    ) -> Self:
         """
         Restarts the subprocess.
 
@@ -199,7 +196,7 @@ class SubProcess:
             logger.warning(
                 f"Process {self._parent_name} with pid {self._process.pid} is not exited."
             )
-            return self.state
+            return self
 
         if (
             self._process.returncode not in exitcodes
@@ -208,8 +205,8 @@ class SubProcess:
             logger.info(
                 f"Restarting process {self._parent_name} with pid: {self._process.pid}"
             )
-            self.start(retries=retries, starttime=starttime)
-        return self.state
+            await self.start(retries=retries, starttime=starttime)
+        return self
 
 
 class Service:
@@ -226,22 +223,22 @@ class Service:
             self,
             **config: Dict[str, Any],
         ) -> None:
-            self.name: str | None = None
-            self.cmd: str | None = None
-            self.numprocs: int | None = None
-            self.umask: int | None = None
-            self.workingdir: str | None = None
-            self.autostart: bool | None = None
-            self.autorestart: AutoRestart | None = None
-            self.exitcodes: List[int] | None = None
-            self.startretries: int | None = None
-            self.starttime: int | None = None
-            self.stopsignal: Signal | None = None
-            self.stoptime: int | None = None
-            self.stdout: str | None = None
-            self.stderr: str | None = None
-            self.user: str | None = None
-            self.env: Dict[str, str] | None = None
+            self.name: str
+            self.cmd: str
+            self.numprocs: int
+            self.umask: int
+            self.workingdir: str
+            self.autostart: bool
+            self.autorestart: AutoRestart
+            self.exitcodes: List[int]
+            self.startretries: int
+            self.starttime: int
+            self.stopsignal: Signal
+            self.stoptime: int
+            self.stdout: str
+            self.stderr: str
+            self.user: str
+            self.env: Dict[str, str] = {}
             self.__dict__.update(config)
 
         def __iter__(self) -> Any:
@@ -259,14 +256,12 @@ class Service:
             **config: The configuration parameters for the service.
         """
         self._config = self.Config(**config)
-        self._processes: List[subprocess.Popen] = []
-        self._pool = Pool(self._config.numprocs)
+        self._processes: List[SubProcess] = []
+        self._start_tasks: List[asyncio.Task] = []
+        self._stop_requested: bool = False
 
         self._init_stdout()
         self._init_stderr()
-
-        if self._config.autostart:
-            self.start()
 
     def __del__(self) -> None:
         """
@@ -333,29 +328,91 @@ class Service:
         self._config = self.Config(**config)
         return self.config
 
-    def start(self) -> None:
+    async def autostart(self) -> None:
+        """
+        Autostart the service if necessary.
+
+        Always call this at the start of your loop.
+        """
+        if self._config.autostart:
+            await self.start()
+            logger.info(f"Service {self._config.name} autostarted.")
+
+    async def _on_subprocess_started(self, task: asyncio.Task) -> object:
+        """
+        Wait for the subprocess to run and autorestart if necessary.
+        """
+        subprocess: SubProcess = task.result()
+        subprocess.wait()
+        # while subprocess.state == SubProcess.State.EXITED and not self._stop_requested:
+        #     subprocess = await subprocess.autorestart(
+        #         exitcodes=self._config.exitcodes,
+        #         retries=self._config.startretries,
+        #         starttime=self._config.starttime,
+        #         autorestart=self._config.autorestart,
+        #     )
+        #     subprocess.wait()
+
+    async def start(self) -> None:
         """
         Starts the service.
         """
-        pass
+        self._start_tasks: List[asyncio.Task] = []
+        for _ in range(self._config.numprocs):
+            subprocess: SubProcess = SubProcess(
+                parent_name=self._config.name,
+                cmd=self._config.cmd,
+                umask=self._config.umask,
+                workingdir=self._config.workingdir,
+                stdout=self.stdout,
+                stderr=self.stderr,
+                user=self._config.user,
+                env=self._config.env,
+            )
+            self._processes.append(subprocess)
+            self._start_tasks += [
+                asyncio.create_task(
+                    subprocess.start(
+                        retries=self._config.startretries,
+                        starttime=self._config.starttime,
+                    )
+                )
+            ]
+            self._start_tasks[-1].add_done_callback(
+                lambda _: asyncio.create_task(
+                    self._on_subprocess_started(self._start_tasks[-1])
+                )
+            )
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stops the service.
         """
-        pass
+        for task in self._start_tasks:
+            try:
+                await asyncio.wait_for(task, timeout=self._config.stoptime)
+            except asyncio.TimeoutError:
+                logger.error(f"Failed to stop process: {task.get_name()}")
+                task.cancel()
 
-    def restart(self) -> None:
+        for process in self._processes:
+            await process.stop(
+                stopsignal=self._config.stopsignal,
+                stoptime=self._config.stoptime,
+            )
+
+    async def restart(self) -> None:
         """
         Restarts the service.
         """
-        pass
+        await self.stop()
+        await self.start()
 
-    def reload(self) -> None:
+    def status(self) -> dict[str, SubProcess.State]:
         """
-        Reloads the configuration of the service.
+        Returns the status of the service.
         """
-        pass
+        return {process._parent_name: process.state for process in self._processes}
 
 
 class ServiceHandler:
@@ -397,7 +454,7 @@ class ServiceHandler:
         """
         pass
 
-    def start(self, service_names: Optional[List[str]] = None):
+    async def start(self, service_names: Optional[List[str]] = None):
         """
         Starts one or multiple services.
 
@@ -406,9 +463,9 @@ class ServiceHandler:
         """
         for service in self._services:
             if service_names and service.config.name in service_names:
-                service.start()
+                await service.start()
 
-    def stop(self, service_names: Optional[List[str]] = None):
+    async def stop(self, service_names: Optional[List[str]] = None):
         """
         Stops one or multiple services.
 
@@ -417,9 +474,9 @@ class ServiceHandler:
         """
         for service in self._services:
             if service_names and service.config.name in service_names:
-                service.stop()
+                await service.stop()
 
-    def restart(self, service_names: Optional[List[str]] = None):
+    async def restart(self, service_names: Optional[List[str]] = None):
         """
         Restarts one or multiple services.
 
@@ -428,7 +485,7 @@ class ServiceHandler:
         """
         for service in self._services:
             if service_names and service.config.name in service_names:
-                service.restart()
+                await service.restart()
 
     @property
     def config(self) -> Config:
@@ -453,11 +510,3 @@ class ServiceHandler:
         """
         self._config = self.Config(**config)
         return self.config
-
-    def reload(self, service_names: Optional[List[str]] = None) -> None:
-        """
-        Reloads the configuration of one or multiple services.
-        """
-        for service in self._services:
-            if service_names and service.config.name in service_names:
-                service.reload()

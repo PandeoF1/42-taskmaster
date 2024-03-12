@@ -13,6 +13,9 @@ services: # gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
     stoptime: 10
+    env:
+      a: "b"
+      c: "d"
     stdout: ./taskmaster.yml # Optionnal (if not present don't log)
     stderr: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal ("")
     # user: aaaaa # Optionnal

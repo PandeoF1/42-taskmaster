@@ -56,7 +56,7 @@ or use the devcontainer provided in the repository.
 
 ## Usage
 
-* Without arguments
+* Without arguments (load taskmaster.yml from current directory)
     ```sh
     taskmaster
     ```
@@ -84,6 +84,8 @@ services:
     starttime: 5
     stopsignal: USR1
     stoptime: 10
+    env: # Optionnal
+      test: "test"
     stdout: ./taskmaster.yml # Optionnal (if not present don't log)
     stderr: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal
     # user: aaaaa # Optionnal (Downgrade privileges)

@@ -14,6 +14,14 @@ class TestConfig(unittest.TestCase):
     def test_valid_taskmaster(self):
         config = Config()
 
+    def test_valid_email(self):
+        config = Config("./tests/config_templates/valid/email.yaml")
+        self.assertEqual(config.email["smtp_server"], "smtp.gmail.com")
+        self.assertEqual(config.email["smtp_port"], 465)
+        self.assertEqual(config.email["smtp_email"], "no@foo.bar")
+        self.assertEqual(config.email["smtp_password"], "password")
+        self.assertEqual(config.email["to"], "no@foo.bar")
+
     def test_valid_autorestart_always(self):
         config = Config("./tests/config_templates/valid/autorestart_always.yaml")
         self.assertEqual(config.services[0]["autorestart"], "always")
@@ -170,3 +178,9 @@ class TestConfig(unittest.TestCase):
             config = Config("./test")
         except FileNotFoundError as e:
             self.assertIn("No configuration file found.", str(e))
+
+    def test_invalid_email(self):
+        try:
+            config = Config("./tests/config_templates/invalid/email.yaml")
+        except SchemaError as e:
+            self.assertIn("Invalid configuration file.", str(e))

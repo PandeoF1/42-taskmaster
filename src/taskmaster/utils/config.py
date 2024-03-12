@@ -188,3 +188,9 @@ class Config:
     @property
     def services(self):
         return self.config["services"]
+
+    @property
+    def email(self):
+        if "email" not in self.config:
+            return None
+        return self.config["email"]

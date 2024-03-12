@@ -18,14 +18,18 @@ class Email:
         Send an email
         """
         try:
-            if "email" in self.config.config:
+            if self.config.email:
                 server = smtplib.SMTP(
-                    self.config["smtp_server"], self.config["smtp_port"]
+                    self.config.email["smtp_server"], self.config.email["smtp_port"]
                 )
                 server.starttls()
-                server.login(self.config["smtp_email"], self.config["smtp_password"])
+                server.login(
+                    self.config.email["smtp_email"], self.config.email["smtp_password"]
+                )
                 msg = f"Subject: {subject}\n\n{message}"
-                server.sendmail(self.config["smtp_email"], self.config["to"], msg)
+                server.sendmail(
+                    self.config.email["smtp_email"], self.config.email["to"], msg
+                )
                 server.quit()
                 return True
             else:

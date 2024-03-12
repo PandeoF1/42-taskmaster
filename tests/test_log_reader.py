@@ -27,13 +27,13 @@ class TestLogReader(unittest.TestCase):
 
     def test_read(self):
         with open("/tmp/test.log", "r") as f:
-            reader = LogReader(f.name, size=20)
-            self.assertEqual(reader._read(), file_content[:20])
+            reader = LogReader(f.name, size=200)
+            self.assertEqual(reader._read(), file_content[:200])
 
     def test_half_read(self):
         with open("/tmp/test.log", "r") as f:
             reader = LogReader(f.name, size=5)
-            self.assertEqual(reader._read(), file_content[:5])
+            self.assertEqual(reader._read(), file_content[6:11])
 
     def test_read_size_zero(self):
         with open("/tmp/test.log", "r") as f:
@@ -48,8 +48,8 @@ class TestLogReader(unittest.TestCase):
             reader = LogReader(f.name, size=5)
             reader._read()
             reader.up()
-            self.assertEqual(reader._start, 1)
-            self.assertEqual(reader._read(), file_content[1:6])
+            self.assertEqual(reader._start, 6)
+            self.assertEqual(reader._read(), file_content[6:11])
 
     def test_up_past_end(self):
         with open("/tmp/test.log", "r") as f:
@@ -103,7 +103,7 @@ class TestLogReader(unittest.TestCase):
             reader = LogReader(f.name, size=5)
             reader.size = 10
             self.assertEqual(reader.size, 10)
-            self.assertEqual(reader._read(), file_content[:10])
+            self.assertEqual(reader._read(), file_content[1:11])
 
     def test_size_change_invalid(self):
         with open("/tmp/test.log", "r") as f:

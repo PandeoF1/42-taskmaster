@@ -131,27 +131,61 @@ def configuration_error(self, error) -> None:
     # Configuration page
     try:
         # log.log("Loading configuration page.")
-        if "configuration" not in self.win:
-            self.win["configuration"] = curses.newwin(self.height, self.width, 0, 0)
-            self.win_data["configuration"] = dict()
-            self.win_data["configuration"]["selected"] = "config"
-        self.win_active = "configuration"
-        self.box("configuration")
-        self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
-        self.win["configuration"].addstr(
+        if "configuration_infos" not in self.win:
+            self.win["configuration_infos"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win_data["configuration_infos"] = dict()
+            self.win_data["configuration_infos"]["selected"] = "config"
+        self.win_active = "configuration_infos"
+        self.box("configuration_infos")
+        self.win["configuration_infos"].addstr(3, 4, "Taskmaster - Configuration")
+        self.win["configuration_infos"].addstr(
             int(self.height / 2), int(self.width / 2 - 31), f"Error: {error}"
         )
         count = 6
         while count > 1:
             count -= 1
-            self.win["configuration"].addstr(
+            self.win["configuration_infos"].addstr(
                 self.height - 3,
                 4,
                 f"Automatically closing in {count} second{'s.' if count > 1 else '. '}",
             )
-            self.win["configuration"].refresh()
+            self.win["configuration_infos"].refresh()
             time.sleep(1)
-        self.win["configuration"].refresh()
+        self.win["configuration_infos"].refresh()
+    except curses.error as e:
+        logger.error(
+            f"Failed to load configuration page. {e}",
+        )
+
+
+def configuration_success(self) -> None:
+    # Configuration page
+    try:
+        # log.log("Loading configuration page.")
+        if "configuration_infos" not in self.win:
+            self.win["configuration_infos"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win_data["configuration_infos"] = dict()
+            self.win_data["configuration_infos"]["selected"] = "config"
+        self.win_active = "configuration_infos"
+        self.clear("configuration_infos")
+        self.box("configuration_infos")
+        self.win["configuration_infos"].addstr(3, 4, "Taskmaster - Configuration")
+        self.win["configuration_infos"].addstr(
+            int(self.height / 2),
+            int(self.width / 2 - 31),
+            "Configuration file successfully reloaded.",
+        )
+        count = 6
+        while count > 1:
+            count -= 1
+            self.win["configuration_infos"].addstr(
+                self.height - 3,
+                4,
+                f"Automatically closing in {count} second{'s.' if count > 1 else '. '}",
+            )
+            self.win["configuration_infos"].refresh()
+            time.sleep(1)
+        self.win["configuration_infos"].refresh()
     except curses.error as e:
         logger.error(
             f"Failed to load configuration page. {e}",

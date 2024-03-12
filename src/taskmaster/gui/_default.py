@@ -1,5 +1,6 @@
 import curses
 from ..utils.logger import logger
+from ..utils.config import Config
 
 
 def default(self) -> None:
@@ -54,6 +55,14 @@ def default_nav(self, key: int) -> int:
                 self.services()
             elif self.win_data["default"]["selected"] == "config":
                 self.configuration()
+            elif self.win_data["default"]["selected"] == "reload":
+                try:
+                    config = Config(self.config.path)
+                    self.config = config
+                    self.configuration_success()
+                    self.default()
+                except Exception as e:
+                    self.configuration_error(e)
             return True
         self.default()
     except curses.error as e:

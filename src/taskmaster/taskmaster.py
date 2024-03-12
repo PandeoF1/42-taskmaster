@@ -32,7 +32,7 @@ async def interfaces(stdscr, config) -> None:
         interface.config = config
         interface.default()
         while True:
-            await asyncio.sleep(0.)
+            await asyncio.sleep(0.01)
             interface.update_size()
             key = interface.win[interface.win_active].getch()
             stop = interface.default_nav(key)
@@ -70,8 +70,6 @@ async def taskmaster(config: Config) -> None:
 
 async def services(config: Config) -> None:
     pass
-
-
 
 
 def main() -> None:

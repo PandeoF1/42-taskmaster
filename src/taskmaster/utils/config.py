@@ -113,6 +113,7 @@ class Config:
     def __init__(self, path="taskmaster.yml"):
         # Try to open if it exists `taskmaster.yml`
         try:
+            self.path = path
             with open(path, "r") as file:
                 content = yaml.safe_load(file)
                 if not validator.validate(content):

@@ -22,6 +22,35 @@ keys = [
 ]
 
 schema = {
+    "email": {
+        "type": "dict",
+        "schema": {
+            "smtp_server": {
+                "type": "string",
+                "required": True,
+                "minlength": 1,
+            },
+            "smtp_port": {
+                "type": "integer",
+                "required": True,
+            },
+            "smtp_email": {
+                "type": "string",
+                "required": True,
+                "minlength": 1,
+                "regex": r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+            },
+            "smtp_password": {
+                "type": "string",
+                "required": True,
+            },
+            "to": {
+                "type": "string",
+                "required": True,
+                "regex": r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+            },
+        },
+    },
     "services": {
         "type": "list",
         "required": True,
@@ -99,7 +128,7 @@ schema = {
                 },
             },
         },
-    }
+    },
 }
 
 validator = Validator(schema)

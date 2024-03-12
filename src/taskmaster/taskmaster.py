@@ -35,8 +35,11 @@ async def interfaces(stdscr, config) -> None:
             await asyncio.sleep(0.01)
             interface.update_size()
             key = interface.win[interface.win_active].getch()
-            if interface.default_nav(key) == -1:
+            stop = interface.default_nav(key)
+            if stop == -1:
                 break
+            elif stop:
+                continue
             elif interface.services_nav(key) == -1:
                 break
             elif interface.config_nav(key) == -1:

@@ -2,17 +2,23 @@ import yaml
 from .logger import logger
 from cerberus import Validator, SchemaError
 
-
-def validate_dict(data: dict, template: dict) -> bool:
-    for key, expected_type in template.items():
-        if not len(data) == len(template):
-            return "Invalid number of keys."
-        if key not in data:
-            return key + " is missing."
-        if not isinstance(data[key], expected_type):
-            return key + " is not of type " + str(expected_type)
-    return None
-
+keys = [
+    "name",
+    "cmd",
+    "numprocs",
+    "umask",
+    "workingdir",
+    "autostart",
+    "autorestart",
+    "exitcodes",
+    "startretries",
+    "starttime",
+    "stopsignal",
+    "stoptime",
+    "stdout",
+    "stderr",
+    "user"
+]
 
 schema = {
     "services": {
@@ -111,6 +117,22 @@ class Config:
                 names = [service["name"] for service in content["services"]]
                 if len(names) != len(set(names)):
                     raise ValueError("Duplicate service names.")
+                # Sort keys to have all services in the same order
+                data = content["services"]
+                _services = []
+                for service in data:
+                    # For each optionnal key if don't exist add it
+                    service.setdefault("stdout", "")
+                    service.setdefault("stderr", "")
+                    service.setdefault("user", "")
+                    # range key in this order : name, cmd, numprocs, umask, workingdir, autostart, autorestart, exitcodes, startretries, starttime, stopsignal, stoptime, stdout, stderr, user
+                    _service = dict()
+                    for key in keys:
+                        _service[key] = service[key]
+                    _services.append(_service)
+                    # sorted(_service.items(), key=lambda x: x[0])
+                
+                content["services"] = [dict(service) for service in _services]
                 self.config = content
         except FileNotFoundError:
             # Throw an error if the file does not exist
@@ -124,8 +146,8 @@ class Config:
             print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
             raise ValueError("Invalid configuration file.")
-        except Exception:
-            logger.error("Failed to read configuration file.")
+        except Exception as e:
+            logger.error(f"Failed to read configuration file. {e}")
             raise Exception("Failed to read configuration file.")
 
     @property

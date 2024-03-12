@@ -31,12 +31,14 @@ class LogReader:
         self._log_file = open(log_file, "r")
         self._log_level = log_level
         self._start = 0
+        self._stay_end = False
 
         if size <= 0:
             raise ValueError("Size must be greater than 0.")
         self._size = size
 
         self._buffer = []
+        self.latest()
 
     def __del__(self) -> None:
         if hasattr(self, "_log_file"):
@@ -98,6 +100,10 @@ class LogReader:
             int: The new starting index of the buffer.
 
         """
+        if self.end:
+            self.stay_end = True
+        else:
+            self.stay_end = False
         self._read()
         if self._start + self._size < len(self._buffer):
             self._start += 1
@@ -111,6 +117,7 @@ class LogReader:
             int: The new starting index of the buffer.
 
         """
+        self.stay_end = False
         self._read()
         if self._start > 0:
             self._start -= 1
@@ -137,7 +144,34 @@ class LogReader:
             list[str]: The lines in the buffer.
 
         """
+        if self._stay_end:
+            self.latest()
         return self._read()
+
+    @property
+    def stay_end(self) -> bool:
+        """
+        Returns whether the buffer is at the end of the file or not.
+
+        Returns:
+            bool: True if the buffer is at the end of the file, False otherwise.
+
+        """
+        return self._stay_end
+    
+    @stay_end.setter
+    def stay_end(self, value: bool) -> None:
+        """
+        Setter for the stay_end attribute.
+
+        Args:
+            value (bool): The new value for the stay_end attribute.
+
+        Returns:
+            None
+
+        """
+        self._stay_end = value
 
     def latest(self) -> None:
         """
@@ -147,5 +181,6 @@ class LogReader:
             None
 
         """
+        self.stay_end = True
         self._read()
         self._start = len(self._buffer) - self._size

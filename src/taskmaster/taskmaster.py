@@ -7,7 +7,7 @@ from typing import Any
 import random
 
 from .utils.logger import logger
-from .utils.gui import Gui
+from .gui.gui import Gui
 from .utils.config import Config
 
 # log = logger("taskmaster")

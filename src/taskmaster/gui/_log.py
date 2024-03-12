@@ -17,7 +17,6 @@ def log(self, log: LogReader = None) -> None:
         else:
             self.win_data["log"]["LogReader"] = log
         self.win_active = "log"
-        self.box("log")
         self.win["log"].addstr(3, 4, "Taskmaster - Log")
         log.size = self.height - 8
         content = log.lines
@@ -27,8 +26,9 @@ def log(self, log: LogReader = None) -> None:
         self.win_data["log"]["content_height"] = len(content)
         self.win_data["log"]["content_width"] = 0
         for line in content:
-            if len(line) > self.win_data["log"]["content_width"]:
-                self.win_data["log"]["content_width"] = len(line)
+            self.win_data["log"]["content_width"] = max(
+                self.win_data["log"]["content_width"], len(line)
+            )
         for i, line in enumerate(content):
             # print only from index to window width (start the print from x: 4 and y: 5, index are only where to start in the table)
             if (
@@ -38,13 +38,7 @@ def log(self, log: LogReader = None) -> None:
                 self.win["log"].addstr(
                     4 + i - self.win_data["log"]["index_y"],
                     4,
-                    line[
-                        self.win_data["log"]["index_x"] : self.win_data["log"][
-                            "index_x"
-                        ]
-                        + self.width
-                        - 8
-                    ],
+                    line[self.win_data["log"]["index_x"] : self.win_data["log"]["index_x"] + self.width - 8],
                 )
         if (
             self.win_data["log"]["index_x"] - 8 + self.width
@@ -79,6 +73,8 @@ def log(self, log: LogReader = None) -> None:
             4,
             f"Press 'q' to go back. - (↑•↓•←•→ to navigate) {log._start}",
         )
+        self.box("log")
+        
         self.win["log"].refresh()
     except curses.error as e:
         logger.error(f"Failed to load log page. {e}")
@@ -94,17 +90,17 @@ def log_nav(self, key: int) -> None:
             self.win_data["log"]["index_x"] = 0
             self.services()
             return 0
-        if key == 65:
+        if key == 65: # ↑
             self.win_data["log"]["LogReader"].down()
-        if key == 66:
+        if key == 66: # ↓
             self.win_data["log"]["LogReader"].up()
-        if key == 68:
+        if key == 68: # ←
             if self.win_data["log"]["index_x"] > 0:
                 self.win_data["log"]["index_x"] -= 2
-        if key == 67:
+        if key == 67: # →
             if (
                 self.win_data["log"]["index_x"]
-                < self.win_data["log"]["content_width"] - self.width
+                < self.win_data["log"]["content_width"] - self.width + 8
             ):
                 self.win_data["log"]["index_x"] += 2
         self.log()

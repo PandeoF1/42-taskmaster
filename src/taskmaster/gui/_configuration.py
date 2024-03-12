@@ -118,7 +118,7 @@ def config_nav(self, key: int) -> None:
         if key == 67:  # →
             if (
                 self.win_data["configuration"]["index_x"]
-                < self.win_data["configuration"]["content_width"] - self.width
+                < self.win_data["configuration"]["content_width"] - self.width + 7
             ):
                 self.win_data["configuration"]["index_x"] += 2
         self.configuration()
@@ -137,7 +137,6 @@ def configuration_error(self, error) -> None:
         self.win_active = "configuration"
         self.box("configuration")
         self.win["configuration"].addstr(3, 4, "Taskmaster - Configuration")
-        # Print error
         self.win["configuration"].addstr(
             int(self.height / 2), int(self.width / 2 - 31), f"Error: {error}"
         )

@@ -1,4 +1,4 @@
-services:
+services: # ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
   - cmd: sleepa
     name: "sleep 100aaaaa"
     numprocs: 8 # min 1 max 32
@@ -13,8 +13,8 @@ services:
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
     stoptime: 10
-    stdout: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal (if not present don't log)
-    stderr: /tmp/sleep.stderr # Optionnal ("")
+    stdout: ./taskmaster.yml # Optionnal (if not present don't log)
+    stderr: /workspaces/42-taskmaster/logs/taskmaster.log # Optionnal ("")
     # user: aaaaa # Optionnal
   - cmd: sleepb
     name: "sleep 100"
@@ -30,7 +30,7 @@ services:
     starttime: 5
     stopsignal: USR1 # On verra si on fait un template des sigevent
     stoptime: 10
-    user: gdgd # Optionnal
+    user: gdgdaaaa0 # Optionnal
 
   - name: sleepba
     cmd: "sleep 100"
@@ -553,3 +553,5 @@ services:
     stdout: /tmp/sleep.stdout # Optionnal (if not present don't log)
     stderr: /tmp/sleep.stderr # Optionnal ("")
     user: gdgd # Optionnal
+
+# gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg123456789 fin

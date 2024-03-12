@@ -137,7 +137,7 @@ def services_nav(self, key: int) -> None:
         if key == 67:  # →
             if (
                 self.win_data["services"]["index_x"]
-                < self.win_data["services"]["content_width"] - self.width
+                < self.win_data["services"]["content_width"] - self.width + 8 
             ):
                 self.win_data["services"]["index_x"] += 2
         try:

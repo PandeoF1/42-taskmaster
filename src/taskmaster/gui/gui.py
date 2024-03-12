@@ -10,7 +10,7 @@ class Gui:
     A class that creates a GUI for the taskmaster application.
     """
 
-    pages = ["services", "config"]
+    pages = ["services", "config", "reload"]
 
     def __init__(self):
         # Initialize the screen
@@ -41,7 +41,12 @@ class Gui:
     from ._default import default, default_nav
     from ._services import services, services_nav
     from ._log import log, log_nav, log_not_found
-    from ._configuration import configuration, config_nav, configuration_error
+    from ._configuration import (
+        configuration,
+        config_nav,
+        configuration_error,
+        configuration_success,
+    )
 
     def end(self) -> None:
         # Restore terminal settings and end curses mode

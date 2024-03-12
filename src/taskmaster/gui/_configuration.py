@@ -132,7 +132,9 @@ def configuration_error(self, error) -> None:
     try:
         # log.log("Loading configuration page.")
         if "configuration_infos" not in self.win:
-            self.win["configuration_infos"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win["configuration_infos"] = curses.newwin(
+                self.height, self.width, 0, 0
+            )
             self.win_data["configuration_infos"] = dict()
             self.win_data["configuration_infos"]["selected"] = "config"
         self.win_active = "configuration_infos"
@@ -163,7 +165,9 @@ def configuration_success(self) -> None:
     try:
         # log.log("Loading configuration page.")
         if "configuration_infos" not in self.win:
-            self.win["configuration_infos"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win["configuration_infos"] = curses.newwin(
+                self.height, self.width, 0, 0
+            )
             self.win_data["configuration_infos"] = dict()
             self.win_data["configuration_infos"]["selected"] = "config"
         self.win_active = "configuration_infos"

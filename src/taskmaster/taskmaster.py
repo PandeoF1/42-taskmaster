@@ -33,9 +33,7 @@ async def interfaces(stdscr, config) -> None:
         interface.service_handler = ServiceHandler(
             **dict({"services": config.services})
         )
-        task = asyncio.create_task(
-            interface.service_handler.start()
-        )  # TODO: remove when auto start
+        task = asyncio.create_task(interface.service_handler.autostart())
         interface.config = config
         interface.default()
         while True:

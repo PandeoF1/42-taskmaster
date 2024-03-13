@@ -4,7 +4,7 @@ services:
     numprocs: 2
     umask: 077
     workingdir: /tmp
-    autostart: true
+    autostart: false
     autorestart: unexpected
     exitcodes:
       - 0
@@ -21,7 +21,7 @@ services:
     numprocs: 8
     umask: 077
     workingdir: /tmp
-    autostart: true
+    autostart: false
     autorestart: unexpected
     exitcodes:
       - 0
@@ -38,7 +38,7 @@ services:
     numprocs: 8
     umask: 077
     workingdir: /tmp
-    autostart: true
+    autostart: false
     autorestart: unexpected
     exitcodes:
       - 0

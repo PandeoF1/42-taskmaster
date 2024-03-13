@@ -296,6 +296,8 @@ class Service:
         self._init_stdout()
         self._init_stderr()
 
+        self._create_subprocesses(num=self._config.numprocs)
+
     def __del__(self) -> None:
         """
         Destructor for the Program class.
@@ -400,19 +402,8 @@ class Service:
 
         self._start_tasks.remove(task)
 
-    async def start(self) -> None:
-        """
-        Starts the service.
-        """
-        for process in self._processes:
-            if (
-                process.state != SubProcess.State.RUNNING
-                and process.state != SubProcess.State.STARTING
-            ):
-                self._processes.remove(process)
-
-        self._start_tasks: List[asyncio.Task] = []
-        for _ in range(self._config.numprocs - len(self._processes)):
+    def _create_subprocesses(self, num: int) -> None:
+        for _ in range(num):
             subprocess: SubProcess = SubProcess(
                 parent_name=self._config.name,
                 cmd=self._config.cmd,
@@ -424,9 +415,24 @@ class Service:
                 env=self._config.env,
             )
             self._processes.append(subprocess)
+
+    async def start(self) -> None:
+        """
+        Starts the service.
+        """
+        for process in self._processes:
+            if (
+                process.state != SubProcess.State.RUNNING
+                and process.state != SubProcess.State.STARTING
+            ):
+                self._processes.remove(process)
+
+        self._create_subprocesses(num=self._config.numprocs - len(self._processes))
+        self._start_tasks: List[asyncio.Task] = []
+        for process in self._processes:
             self._start_tasks += [
                 asyncio.create_task(
-                    subprocess.start(
+                    process.start(
                         retries=self._config.startretries,
                         starttime=self._config.starttime,
                     )
@@ -561,6 +567,14 @@ class ServiceHandler:
         for service in self._services:
             if service.config.name in service_names:
                 asyncio.create_task(service.restart())
+
+    async def autostart(self) -> None:
+        """
+        Autostart all services.
+        """
+        logger.info("Autostarting services.")
+        for service in self._services:
+            asyncio.create_task(service.autostart())
 
     @property
     def config(self) -> Config:

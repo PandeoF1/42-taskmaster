@@ -4,7 +4,8 @@ import sys
 import signal
 import argparse
 from typing import Any
-import random
+
+from .service import ServiceHandler
 
 from .utils.logger import logger
 from .gui.gui import Gui
@@ -29,6 +30,12 @@ async def interfaces(stdscr, config) -> None:
     # logger.log("Starting taskmaster.")
     try:
         interface = Gui()
+        interface.service_handler = ServiceHandler(
+            **dict({"services": config.services})
+        )
+        task = asyncio.create_task(
+            interface.service_handler.start()
+        )  # TODO: remove when auto start
         interface.config = config
         interface.default()
         while True:
@@ -48,28 +55,17 @@ async def interfaces(stdscr, config) -> None:
                 break
         # Stop all services
         interface.end()
+        task.cancel()
     except Exception as e:
         logger.error(e)
-
-
-async def test(config: Config) -> None:
-    while True:
-        # logger.info("test")
-        # edit config
-        config.services[0]["numprocs"] = random.randint(1, 100)
-        await asyncio.sleep(0.5)
 
 
 async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
     # Execute interfaces and test in parallel
-    await asyncio.gather(curses.wrapper(interfaces, config), test(config))
+    await asyncio.gather(curses.wrapper(interfaces, config))
     # logger.close()
-
-
-async def services(config: Config) -> None:
-    pass
 
 
 def main() -> None:

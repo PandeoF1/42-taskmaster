@@ -375,13 +375,14 @@ class Service:
         """
         Wait for the subprocess to run and autorestart if necessary.
         """
-        subprocess = await task
+        subprocess: SubProcess = await task
         await subprocess.wait()
         while (
             subprocess.state == SubProcess.State.EXITED
             and subprocess.retries < self._config.startretries
         ):
             logger.debug(f"{self._config.name}: Checking if an autorestart is required")
+            await asyncio.sleep(1)
             subprocess = await subprocess.autorestart(
                 exitcodes=self._config.exitcodes,
                 retries=self._config.startretries,
@@ -392,6 +393,10 @@ class Service:
                 logger.debug(f"{self._config.name}: No autorestart required")
                 return
             await subprocess.wait()
+
+        if subprocess.retries >= self._config.startretries:
+            logger.error(f"{self._config.name}: Max retry attempt exceeded")
+            subprocess._state = SubProcess.State.FATAL
 
         self._start_tasks.remove(task)
 
@@ -427,7 +432,7 @@ class Service:
                     )
                 )
             ]
-            await self._on_subprocess_started(self._start_tasks[-1])
+            asyncio.create_task(self._on_subprocess_started(self._start_tasks[-1]))
 
     async def stop(self) -> None:
         """
@@ -490,18 +495,27 @@ class ServiceHandler:
         self._config: ServiceHandler.Config = self.Config(**config)
         self._services: List[Service] = []
 
+        for service in self._config.services:
+            self._services.append(Service(**dict(service)))
+
     def status(self) -> list[dict[str, str]]:
         """
         Displays the status of all services.
         """
         ret: list[dict[str, str]] = []
         for service in self._services:
-            ret.append(
+            status = dict(
                 {
                     "name": service.config.name,
                     "cmd": service.config.cmd,
-                    **{k: v.value for (k, v) in service.status.items()},
                 }
+            )
+            count = 0
+            for process in service._processes:
+                count += 1
+                status[f"process_{count}"] = process.state.value
+            ret.append(
+                status,
             )
         return ret
 
@@ -515,9 +529,10 @@ class ServiceHandler:
         if not service_names:
             service_names = [service.config.name for service in self._services]
 
+        logger.debug(f"Starting services: {service_names}")
         for service in self._services:
             if service.config.name in service_names:
-                await service.start()
+                asyncio.create_task(service.start())
 
     async def stop(self, service_names: Optional[List[str]] = None):
         """
@@ -531,7 +546,7 @@ class ServiceHandler:
 
         for service in self._services:
             if service.config.name in service_names:
-                await service.stop()
+                asyncio.create_task(service.stop())
 
     async def restart(self, service_names: Optional[List[str]] = None):
         """
@@ -545,7 +560,7 @@ class ServiceHandler:
 
         for service in self._services:
             if service.config.name in service_names:
-                await service.restart()
+                asyncio.create_task(service.restart())
 
     @property
     def config(self) -> Config:

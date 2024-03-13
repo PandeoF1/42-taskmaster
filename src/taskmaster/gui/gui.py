@@ -1,8 +1,6 @@
 import curses
 from ..utils.logger import logger
-from ..utils.log_reader import LogReader
 import time
-from .table import table
 
 
 class Gui:
@@ -57,6 +55,30 @@ class Gui:
             curses.endwin()
         except curses.error as e:
             logger.error(f"Failed to end screen. {e}")
+
+    @property
+    def service_handler(self):
+        return self._service_handler
+
+    @service_handler.setter
+    def service_handler(self, service_handler):
+        self._service_handler = service_handler
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, config):
+        self._config = config
+
+    @property
+    def win_active(self):
+        return self._win_active
+
+    @win_active.setter
+    def win_active(self, win_active):
+        self._win_active = win_active
 
     def __del__(self) -> None:
         self.end()

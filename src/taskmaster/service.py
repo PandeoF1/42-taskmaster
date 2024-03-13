@@ -1,8 +1,10 @@
+from asyncio.subprocess import Process
 from io import TextIOWrapper
 from typing import List, Dict, Any, Optional, Self
 import subprocess
 from enum import Enum
 import asyncio
+import contextlib
 
 from .utils.logger import logger
 from .utils.config import Signal, AutoRestart
@@ -44,17 +46,17 @@ class SubProcess:
         self._stderr = stderr
         self._user = user
         self._env = env
-        self._process: subprocess.Popen | None = None
+        self._process: Process | None = None
         self._state: SubProcess.State = self.State.STOPPED
         self._retries: int = 0
 
-    def __del__(self) -> None:
-        """
-        Destructor for the SubProcess class.
-        """
-        if self._process is not None:
-            self._process.kill()
-            self._process.wait()
+    # async def __del__(self) -> None:
+    #     """
+    #     Destructor for the SubProcess class.
+    #     """
+    #     if self._process is not None:
+    #         self._process.kill()
+    #         await self._process.wait()
 
     @property
     def state(self) -> State:
@@ -62,6 +64,13 @@ class SubProcess:
         Gets the state of the subprocess.
         """
         return self._state
+
+    async def _poll(self) -> int | None:
+        if not self._process:
+            return
+        with contextlib.suppress(asyncio.TimeoutError):
+            await asyncio.wait_for(self._process.wait(), 1e-6)
+        return self._process.returncode
 
     async def start(self, retries: int, starttime: int) -> Self:
         """
@@ -71,7 +80,7 @@ class SubProcess:
         adding one second each time. So if you set startretries=3, taskmaster will wait one,
         two and then three seconds between each restart attempt, for a total of 5 seconds.
         """
-        if self._process and self._process.poll() is None:
+        if self._process and await self._poll() is None:
             logger.warning(
                 f"Process {self._parent_name}-{self._process.pid} is already running."
             )
@@ -84,8 +93,8 @@ class SubProcess:
             try:
                 if self._cmd is None:
                     raise ValueError("Command is not provided.")
-                self._process = subprocess.Popen(
-                    self._cmd.split(),
+                self._process = await asyncio.create_subprocess_exec(
+                    *self._cmd.split(),
                     cwd=self._workingdir,
                     env=self._env,
                     stdout=self._stdout,
@@ -99,10 +108,10 @@ class SubProcess:
                 )
 
                 for _ in range(starttime * 10):
-                    if self._process.poll() is not None:
+                    if await self._poll() is not None:
                         break
                     await asyncio.sleep(0.1)
-                if self._process.poll() is None:
+                if await self._poll() is None:
                     logger.info(
                         f"Process {self._parent_name}-{self._process.pid} is now running."
                     )
@@ -134,29 +143,32 @@ class SubProcess:
 
         return self
 
-    def wait(self) -> Self:
+    async def wait(self) -> Self:
         """
         Waits for the subprocess to finish.
 
-        Assumes the subprocess is already running.
+        Assumes the subprocess has been started.
         """
 
-        if self._process is None or self._state != self.State.RUNNING:
-            logger.debug(f"Process {self._parent_name} is not running.")
-            raise RuntimeError("Process is not running.")
+        if self._process is None or (
+            self._state != self.State.RUNNING and self._state != self.State.EXITED
+        ):
+            logger.debug(f"Process {self._parent_name} is not started.")
+            logger.debug(f"Process {self._parent_name} state is {self._state.name}")
+            raise RuntimeError("Process is not started.")
 
         logger.debug(
             f"Waiting for process {self._parent_name}-{self._process.pid} to finish."
         )
-        self._process.wait()
+        await self._process.wait()
         logger.debug(f"Process {self._parent_name}-{self._process.pid} exited.")
         self._state = self.State.EXITED
         return self
 
     async def stop(self, stopsignal: Signal, stoptime: int) -> Self:
         """
-        Tries to stop the program using the given signal.
-        If the program is not stopped after stoptime seconds, the process will be killed
+        Tries to stop the process using the given signal.
+        If the process is not stopped after stoptime seconds, it will be killed
         """
         if self._process is None:
             raise RuntimeError("Process is not running.")
@@ -165,9 +177,9 @@ class SubProcess:
         self._state = self.State.STOPPING
         for _ in range(stoptime * 10):
             await asyncio.sleep(0.1)
-            if self._process.poll():
+            if await self._poll():
                 break
-        if not self._process.poll():
+        if not await self._poll():
             self._process.kill()
         self._state = self.State.STOPPED
         return self
@@ -206,6 +218,10 @@ class SubProcess:
                 f"Restarting process {self._parent_name} with pid: {self._process.pid}"
             )
             await self.start(retries=retries, starttime=starttime)
+        else:
+            logger.debug(
+                f"Process {self._parent_name} with pid {self._process.pid} doesn't need to be restarted"
+            )
         return self
 
 
@@ -258,7 +274,6 @@ class Service:
         self._config = self.Config(**config)
         self._processes: List[SubProcess] = []
         self._start_tasks: List[asyncio.Task] = []
-        self._stop_requested: bool = False
 
         self._init_stdout()
         self._init_stderr()
@@ -344,14 +359,18 @@ class Service:
         """
         subprocess: SubProcess = task.result()
         subprocess.wait()
-        # while subprocess.state == SubProcess.State.EXITED and not self._stop_requested:
-        #     subprocess = await subprocess.autorestart(
-        #         exitcodes=self._config.exitcodes,
-        #         retries=self._config.startretries,
-        #         starttime=self._config.starttime,
-        #         autorestart=self._config.autorestart,
-        #     )
-        #     subprocess.wait()
+        while subprocess.state == SubProcess.State.EXITED:
+            logger.debug(f"{self._config.name}: Checking if an autorestart is required")
+            subprocess = await subprocess.autorestart(
+                exitcodes=self._config.exitcodes,
+                retries=self._config.startretries,
+                starttime=self._config.starttime,
+                autorestart=self._config.autorestart,
+            )
+            if subprocess.state == SubProcess.State.EXITED:
+                logger.debug(f"{self._config.name}: No autorestart required")
+                return
+            subprocess.wait()
 
     async def start(self) -> None:
         """
@@ -378,6 +397,7 @@ class Service:
                     )
                 )
             ]
+
             self._start_tasks[-1].add_done_callback(
                 lambda _: asyncio.create_task(
                     self._on_subprocess_started(self._start_tasks[-1])

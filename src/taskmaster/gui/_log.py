@@ -23,7 +23,7 @@ def log(self, log: LogReader = None) -> None:
         self.win["log"].addstr(
             3,
             4 + 20,
-            str(f"({log._path})")[0:self.width - 20],
+            str(f"({log._path})")[0 : self.width - 20],
         )
         log.size = self.height - 8
         content = log.lines

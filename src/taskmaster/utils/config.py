@@ -3,6 +3,24 @@ from .logger import logger
 from cerberus import Validator, SchemaError
 from enum import Enum
 
+keys = [
+    "name",
+    "cmd",
+    "numprocs",
+    "umask",
+    "workingdir",
+    "autostart",
+    "autorestart",
+    "exitcodes",
+    "startretries",
+    "starttime",
+    "stopsignal",
+    "stoptime",
+    "env",
+    "stdout",
+    "stderr",
+    "user",
+]
 
 class AutoRestart(Enum):
     """
@@ -40,18 +58,36 @@ class Signal(Enum):
     QUIT = 3
 
 
-def validate_dict(data: dict, template: dict) -> str | None:
-    for key, expected_type in template.items():
-        if not len(data) == len(template):
-            return "Invalid number of keys."
-        if key not in data:
-            return key + " is missing."
-        if not isinstance(data[key], expected_type):
-            return key + " is not of type " + str(expected_type)
-    return None
-
-
 schema = {
+    "email": {
+        "type": "dict",
+        "schema": {
+            "smtp_server": {
+                "type": "string",
+                "required": True,
+                "minlength": 1,
+            },
+            "smtp_port": {
+                "type": "integer",
+                "required": True,
+            },
+            "smtp_email": {
+                "type": "string",
+                "required": True,
+                "minlength": 1,
+                "regex": r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+            },
+            "smtp_password": {
+                "type": "string",
+                "required": True,
+            },
+            "to": {
+                "type": "string",
+                "required": True,
+                "regex": r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+            },
+        },
+    },
     "services": {
         "type": "list",
         "required": True,
@@ -115,6 +151,9 @@ schema = {
                     "min": 0,
                     "required": True,
                 },
+                "env": {
+                    "type": "dict",
+                },
                 "stdout": {
                     "type": "string",
                 },
@@ -126,7 +165,7 @@ schema = {
                 },
             },
         },
-    }
+    },
 }
 
 validator = Validator(schema)
@@ -140,6 +179,7 @@ class Config:
     def __init__(self, path="taskmaster.yml"):
         # Try to open if it exists `taskmaster.yml`
         try:
+            self.path = path
             with open(path, "r") as file:
                 content = yaml.safe_load(file)
                 if not validator.validate(content):
@@ -148,6 +188,23 @@ class Config:
                 names = [service["name"] for service in content["services"]]
                 if len(names) != len(set(names)):
                     raise ValueError("Duplicate service names.")
+                # Sort keys to have all services in the same order
+                data = content["services"]
+                _services = []
+                for service in data:
+                    # For each optionnal key if don't exist add it
+                    service.setdefault("stdout", "")
+                    service.setdefault("stderr", "")
+                    service.setdefault("user", "")
+                    service.setdefault("env", {})
+                    # range key in this order : name, cmd, numprocs, umask, workingdir, autostart, autorestart, exitcodes, startretries, starttime, stopsignal, stoptime, stdout, stderr, user
+                    _service = dict()
+                    for key in keys:
+                        _service[key] = service[key]
+                    _services.append(_service)
+                    # sorted(_service.items(), key=lambda x: x[0])
+
+                content["services"] = [dict(service) for service in _services]
                 self.config = content
         except FileNotFoundError:
             # Throw an error if the file does not exist
@@ -161,10 +218,16 @@ class Config:
             print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
             raise ValueError("Invalid configuration file.")
-        except Exception:
-            logger.error("Failed to read configuration file.")
+        except Exception as e:
+            logger.error(f"Failed to read configuration file. {e}")
             raise Exception("Failed to read configuration file.")
 
     @property
     def services(self):
         return self.config["services"]
+
+    @property
+    def email(self):
+        if "email" not in self.config:
+            return None
+        return self.config["email"]

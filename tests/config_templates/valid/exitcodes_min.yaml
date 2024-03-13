@@ -15,3 +15,6 @@ services:
     stdout: /tmp/sleep.stdout
     stderr: /tmp/sleep.stderr
     user: test
+    env:
+      a: "b"
+      c: "d"

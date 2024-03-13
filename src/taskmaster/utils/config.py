@@ -157,12 +157,15 @@ schema = {
                 },
                 "stdout": {
                     "type": "string",
+                    "minlength": 1,
                 },
                 "stderr": {
                     "type": "string",
+                    "minlength": 1,
                 },
                 "user": {
                     "type": "string",
+                    "minlength": 1,
                 },
             },
         },

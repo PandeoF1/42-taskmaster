@@ -11,23 +11,20 @@ from .utils.logger import logger
 from .gui.gui import Gui
 from .utils.config import Config
 
-# log = logger("taskmaster")
 
-
-# Handle ctrl c
 def signal_handler(sig: Any, frame: Any) -> None:
     logger.warning("CTRL+C detected. Exiting...")
-    # Do this properly
+    # TODO: stop all services
     sys.exit(0)
 
 
 def init_signal() -> None:
-    # logger.log("Initializing signal handler.")
+    logger.info("Initializing signal handler.")
     signal.signal(signal.SIGINT, signal_handler)
 
 
 async def interfaces(stdscr, config) -> None:
-    # logger.log("Starting taskmaster.")
+    logger.info("Starting taskmaster.")
     try:
         interface = Gui()
         interface.service_handler = ServiceHandler(

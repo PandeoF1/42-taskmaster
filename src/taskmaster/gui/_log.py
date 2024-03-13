@@ -19,6 +19,12 @@ def log(self, log: LogReader = None) -> None:
             self.win_data["log"]["LogReader"] = log
         self.win_active = "log"
         self.win["log"].addstr(3, 4, "Taskmaster - Log")
+        # print the path after the log title (be careful with the length of the path)
+        self.win["log"].addstr(
+            3,
+            4 + 20,
+            str(f"({log._path})")[0:self.width - 20],
+        )
         log.size = self.height - 8
         content = log.lines
         # Clear the window
@@ -90,7 +96,6 @@ def log(self, log: LogReader = None) -> None:
 def log_nav(self, key: int) -> None:
     # Navigate through the log
     try:
-        # logger.debug(f"[Log] Key pressed: {key}")
         if self.win_active != "log":
             return 0
         if key == 113:  # q
@@ -145,3 +150,34 @@ def log_not_found(self, path: str) -> None:
         self.services()
     except curses.error as e:
         logger.error(f"Failed to load log not found page. {e}")
+
+
+def log_error(self) -> None:
+    # Log error page
+    try:
+        # logger.debug("Loading log error page.")
+        if "log_error" not in self.win:
+            self.win["log_error"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win_data["log_error"] = dict()
+            self.win_data["log_error"]["selected"] = "log_error"
+        self.win_active = "log_error"
+        self.box("log_error")
+        self.win["log_error"].addstr(3, 4, "Taskmaster - Log error")
+        self.win["log_error"].addstr(
+            int(self.height / 2),
+            int(self.width / 2 - 31),
+            "An error occurred while trying to read the log file.",
+        )
+        count = 6
+        while count > 1:
+            count -= 1
+            self.win["log_error"].addstr(
+                self.height - 3,
+                4,
+                f"Automatically closing in {count} second{'s.' if count > 1 else '. '}",
+            )
+            self.win["log_error"].refresh()
+            time.sleep(1)
+        self.services()
+    except curses.error as e:
+        logger.error(f"Failed to load log error page. {e}")

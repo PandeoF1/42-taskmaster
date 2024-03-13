@@ -67,3 +67,21 @@ services:
     stdout: /tmp/sleep.stdout
     stderr: /tmp/sleep.stderr
     user: test
+  - name: echo OUIII
+    cmd: "echo OUIII"
+    numprocs: 8
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 10
+    stdout: /tmp/echo.stdout
+    stderr: /tmp/echo.stderr
+    user: test
+

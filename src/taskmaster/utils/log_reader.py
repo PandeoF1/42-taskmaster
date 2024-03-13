@@ -27,6 +27,7 @@ class LogReader:
         log_level: str = "DEBUG",
         size: int = 20,
     ) -> None:
+        self._path = log_file
         self._log_file = open(log_file, "r")
         self._log_level = log_level
         self._start = 0

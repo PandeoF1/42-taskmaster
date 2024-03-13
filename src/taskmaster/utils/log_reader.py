@@ -184,3 +184,5 @@ class LogReader:
         self.stay_end = True
         self._read()
         self._start = len(self._buffer) - self._size
+        if self._start < 0:
+            self._start = 0

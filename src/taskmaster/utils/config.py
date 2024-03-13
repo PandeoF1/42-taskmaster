@@ -194,9 +194,9 @@ class Config:
                 _services = []
                 for service in data:
                     # For each optionnal key if don't exist add it
-                    service.setdefault("stdout", "")
-                    service.setdefault("stderr", "")
-                    service.setdefault("user", "")
+                    service.setdefault("stdout", None)
+                    service.setdefault("stderr", None)
+                    service.setdefault("user", None)
                     service.setdefault("env", {})
                     # range key in this order : name, cmd, numprocs, umask, workingdir, autostart, autorestart, exitcodes, startretries, starttime, stopsignal, stoptime, stdout, stderr, user
                     _service = dict()

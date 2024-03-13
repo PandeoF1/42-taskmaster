@@ -15,4 +15,4 @@ services:
     stoptime: 10
     stdout: /tmp/sleep.stdout
     stderr: /tmp/sleep.stderr
-    user: vscode
+  #   user: vscode

@@ -17,7 +17,9 @@ def table(data):
     max_widths = [len(key) for key in keys]
     for row in data:
         for i, value in enumerate(row.values()):
-            max_widths[i] = max(max_widths[i], len(str(value)))
+            max_widths[i] = max(
+                max_widths[i], len(str(value if value is not None else ""))
+            )
 
     content = ""
     # Print the header
@@ -27,6 +29,8 @@ def table(data):
     # Print the data
     for row in data:
         for i, value in enumerate(row.values()):
-            content += f"{str(value):<{max_widths[i] + padding}}"
+            content += (
+                f"{str(value if value is not None else ''):<{max_widths[i] + padding}}"
+            )
         content += "\n"
     return content

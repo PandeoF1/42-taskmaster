@@ -136,7 +136,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         await subprocess.wait()
         self.assertEqual(subprocess.state.name, "EXITED")
         await subprocess.autorestart(
-            exitcodes=[0], starttime=0, retries=1, autorestart=AutoRestart.ALWAYS
+            exitcodes=[0], starttime=0, retries=1, autorestart=AutoRestart.ALWAYS.value
         )
         self.assertEqual(subprocess.state.name, "RUNNING")
 
@@ -152,7 +152,10 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         await subprocess.wait()
         self.assertEqual(subprocess.state.name, "EXITED")
         await subprocess.autorestart(
-            exitcodes=[1], starttime=0, retries=1, autorestart=AutoRestart.UNEXPECTED
+            exitcodes=[1],
+            starttime=0,
+            retries=1,
+            autorestart=AutoRestart.UNEXPECTED.value,
         )
         self.assertEqual(subprocess.state.name, "RUNNING")
 

@@ -5,7 +5,7 @@ services:
     umask: 077
     workingdir: /tmp
     autostart: true
-    autorestart: unexpected
+    autorestart: never
     exitcodes:
       - 0
       - 2

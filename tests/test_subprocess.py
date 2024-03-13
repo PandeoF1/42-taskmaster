@@ -16,6 +16,26 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         await subprocess.start(retries=0, starttime=0)
         self.assertEqual(subprocess.state.name, "RUNNING")
 
+    async def test_start_with_working_config_with_starttime(self):
+        subprocess: SubProcess = SubProcess(
+            parent_name="sleep",
+            cmd="sleep 1.1",
+            umask=0o77,
+            workingdir="/tmp",
+        )
+        await subprocess.start(retries=0, starttime=1)
+        self.assertEqual(subprocess.state.name, "RUNNING")
+
+    async def test_start_with_working_config_with_starttime_equal(self):
+        subprocess: SubProcess = SubProcess(
+            parent_name="sleep",
+            cmd="sleep 2",
+            umask=0o77,
+            workingdir="/tmp",
+        )
+        await subprocess.start(retries=0, starttime=2)
+        self.assertEqual(subprocess.state.name, "FATAL")  # ptetre random ca
+
     async def test_start_with_nonexistent_workingdir(self):
         subprocess: SubProcess = SubProcess(
             parent_name="sleep",
@@ -215,7 +235,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
             workingdir="/tmp",
         )
         task = asyncio.create_task(subprocess.start(retries=0, starttime=0))
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.01)
         await subprocess.stop(stopsignal=Signal.TERM, stoptime=0)
         await task
         self.assertEqual(subprocess.state.name, "STOPPED")

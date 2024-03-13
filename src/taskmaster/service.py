@@ -490,11 +490,20 @@ class ServiceHandler:
         self._config: ServiceHandler.Config = self.Config(**config)
         self._services: List[Service] = []
 
-    def status(self) -> dict[str, SubProcess.State]:
+    def status(self) -> list[dict[str, str]]:
         """
         Displays the status of all services.
         """
-        pass
+        ret: list[dict[str, str]] = []
+        for service in self._services:
+            ret.append(
+                {
+                    "name": service.config.name,
+                    "cmd": service.config.cmd,
+                    **{k: v.value for (k, v) in service.status.items()},
+                }
+            )
+        return ret
 
     async def start(self, service_names: Optional[List[str]] = None):
         """
@@ -503,8 +512,11 @@ class ServiceHandler:
         Args:
             service_names: The name of the services to start.
         """
+        if not service_names:
+            service_names = [service.config.name for service in self._services]
+
         for service in self._services:
-            if service_names and service.config.name in service_names:
+            if service.config.name in service_names:
                 await service.start()
 
     async def stop(self, service_names: Optional[List[str]] = None):
@@ -514,8 +526,11 @@ class ServiceHandler:
         Args:
             service_names: The name of the services to stop.
         """
+        if not service_names:
+            service_names = [service.config.name for service in self._services]
+
         for service in self._services:
-            if service_names and service.config.name in service_names:
+            if service.config.name in service_names:
                 await service.stop()
 
     async def restart(self, service_names: Optional[List[str]] = None):
@@ -525,8 +540,11 @@ class ServiceHandler:
         Args:
             service_names: The name of the services to restart.
         """
+        if not service_names:
+            service_names = [service.config.name for service in self._services]
+
         for service in self._services:
-            if service_names and service.config.name in service_names:
+            if service.config.name in service_names:
                 await service.restart()
 
     @property

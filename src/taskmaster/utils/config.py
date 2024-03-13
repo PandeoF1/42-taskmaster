@@ -22,6 +22,7 @@ keys = [
     "user",
 ]
 
+
 class AutoRestart(Enum):
     """
     Enumeration for auto restart options.

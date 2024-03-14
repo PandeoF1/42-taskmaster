@@ -187,8 +187,10 @@ class SubProcess:
         if not isinstance(stopsignal, Signal):
             stopsignal = Signal[str(stopsignal)]
 
-        if self._process is None:
-            raise RuntimeError("Process is not running.")
+        if self._process is None or (
+            self._state != self.State.RUNNING and self._state != self.State.STARTING
+        ):
+            return self
 
         self._process.send_signal(stopsignal.value)
         self._state = self.State.STOPPING
@@ -447,9 +449,13 @@ class Service:
         for task in self._start_tasks:
             task.cancel()
 
+        self._start_tasks = []
+
         for process in self._processes:
-            await process.stop(
-                stopsignal=self._config.stopsignal, stoptime=self._config.stoptime
+            asyncio.create_task(
+                process.stop(
+                    stopsignal=self._config.stopsignal, stoptime=self._config.stoptime
+                )
             )
 
     async def restart(self) -> None:

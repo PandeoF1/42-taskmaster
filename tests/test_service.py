@@ -3,7 +3,6 @@ import asyncio
 
 from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
-from src.taskmaster.utils.logger import logger
 
 
 class TestService(unittest.IsolatedAsyncioTestCase):

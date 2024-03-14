@@ -6,10 +6,11 @@
 
 int main(int argc, char **argv)
 {
-    printf("---- stdout test ----\n");
+    fprintf(stdout, "---- stdout test ----\n");
     while (1) {
         sleep(1);
-        printf("Hello\n");
+        fprintf(stdout, "Hello\n");
+        fflush(stdout);
     }
     return 0;
 }

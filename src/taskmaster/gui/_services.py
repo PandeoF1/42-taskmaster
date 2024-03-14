@@ -147,18 +147,6 @@ def services_nav(self, key: int) -> None:
             ):
                 self.win_data["services"]["index_x"] += 2
         try:
-            if key == 10:  # Enter
-                # logger.info(
-                #    f"Selected service: {self.win_data['services']['selected_line']} {self.config.services[self.win_data['services']['selected_line']]['name']} {self.config.services[self.win_data['services']['selected_line']]['stdout']}"
-                # )
-                self.log(
-                    LogReader(
-                        log_file=self.config.services[
-                            self.win_data["services"]["selected_line"]
-                        ]["stdout"]
-                    )
-                )
-                return
             if key == 101:  # e -> stderr
                 self.log(
                     LogReader(
@@ -168,7 +156,7 @@ def services_nav(self, key: int) -> None:
                     )
                 )
                 return
-            if key == 111:  # o -> open stdout
+            if key == 111 or key == 10:  # o or enter -> open stdout
                 self.log(
                     LogReader(
                         log_file=self.config.services[

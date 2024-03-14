@@ -169,7 +169,7 @@ class SubProcess:
         ):
             logger.debug(f"Process {self._parent_name} is not started.")
             logger.debug(f"Process {self._parent_name} state is {self._state.name}")
-            raise RuntimeError("Process is not started.")
+            return self
 
         logger.debug(
             f"Waiting for process {self._parent_name}-{self._process.pid} to finish."
@@ -225,7 +225,8 @@ class SubProcess:
             configuration parameter for the process, it will be restarted.
         """
         if self._process is None:
-            raise RuntimeError("Process is not running.")
+            logger.warning(f"Process {self._parent_name} is not running.")
+            return self
 
         if self.state != self.State.EXITED:
             logger.warning(

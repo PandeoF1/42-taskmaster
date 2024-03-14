@@ -580,6 +580,7 @@ class ServiceHandler:
         """
         logger.info("Autostarting services.")
         for service in self._services:
+            logger.debug(f"Autostarting service: {service.config.name}")
             asyncio.create_task(service.autostart())
 
     @property

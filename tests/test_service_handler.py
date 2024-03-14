@@ -191,6 +191,45 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
             ],
         )
 
+    async def test_start_after_all_processes_exited(self):
+        config = self.config
+        config["services"][0]["autorestart"] = "always"  # type: ignore
+        config["services"][0]["startretries"] = 1  # type: ignore
+        service = ServiceHandler(**config)
+        asyncio.create_task(service.autostart())
+        await asyncio.sleep(5.1)
+        print(service.status())
+        self.assertEqual(
+            service.status()[0],
+            {
+                "name": "sleep all",
+                "cmd": "sleep 2",
+                "process_1": "Fatal",
+                "process_2": "Fatal",
+            },
+        )
+        asyncio.create_task(service.start(["sleep all"]))
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            service.status()[0],
+            {
+                "name": "sleep all",
+                "cmd": "sleep 2",
+                "process_1": "Starting",
+                "process_2": "Starting",
+            },
+        )
+        await asyncio.sleep(3.0)
+        self.assertEqual(
+            service.status()[0],
+            {
+                "name": "sleep all",
+                "cmd": "sleep 2",
+                "process_1": "Starting",
+                "process_2": "Starting",
+            },
+        )
+
     async def test_restart(self):
         pass
 

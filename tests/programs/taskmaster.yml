@@ -1,0 +1,206 @@
+services:
+  - name: umask 03
+    cmd: "./umask.out"
+    numprocs: 1
+    umask: 03
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/umask003.stdout
+    stderr: /tmp/umask003.stderr
+
+  - name: umask 077
+    cmd: "./umask.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/umask077.stdout
+    stderr: /tmp/umask077.stderr
+
+  - name: umask 707
+    cmd: "./umask.out"
+    numprocs: 1
+    umask: 0707
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/umask707.stdout
+    stderr: /tmp/umask707.stderr
+
+  - name: stdout
+    cmd: "./stdout.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/stdout.stdout
+    stderr: /tmp/stdout.stderr
+
+  - name: stderr
+    cmd: "./stderr.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/stderr.stdout
+    stderr: /tmp/stderr.stderr
+
+  - name: stdout no file
+    cmd: "./stdout.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stderr: /tmp/stdout.stderr
+
+  - name: stderr no file
+    cmd: "./stderr.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/stderr.stdout
+
+  - name: random exit
+    cmd: "./random_exit.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_exit.stdout
+    stderr: /tmp/random_exit.stderr
+
+  - name: random sleep
+    cmd: "./random_sleep.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_exit.stdout
+    stderr: /tmp/random_exit.stderr
+
+  - name: random sleep retry
+    cmd: "./random_sleep.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 1
+    startretries: 10
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_exit.stdout
+    stderr: /tmp/random_exit.stderr
+
+  - name: random start time
+    cmd: "./random_sleep.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 1
+    startretries: 1
+    starttime: 2
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_start_time.stdout
+    stderr: /tmp/random_start_time.stderr
+
+  - name: workingdir valid
+    cmd: "./stdout.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 10
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/workingdir_valid.stdout
+    stderr: /tmp/workingdir_valid.stderr
+
+  - name: workingdir invalid
+    cmd: "./stdout.out"
+    numprocs: 1
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 10
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/workingdir_invalid.stdout
+    stderr: /tmp/workingdir_invalid.stderr

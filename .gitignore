@@ -160,5 +160,5 @@ cython_debug/
 #.idea/
 logs/
 .vscode
-taskmaster.yml
+./taskmaster.yml
 **.out

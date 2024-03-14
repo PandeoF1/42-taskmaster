@@ -133,7 +133,7 @@ class SubProcess:
                     success = True
                 else:
                     logger.error(
-                        f"Process {self._parent_name}-{self._process.pid} has exited before {starttime}."
+                        f"Process {self._parent_name}-{self._process.pid} has exited before {starttime} seconds."
                     )
 
             except Exception as e:
@@ -248,6 +248,16 @@ class SubProcess:
                 f"Process {self._parent_name} with pid {self._process.pid} doesn't need to be restarted"
             )
         return self
+
+    def flush(self) -> None:
+        """
+        Flushes the stdout and stderr buffers.
+        """
+        if type(self._stdout) is TextIOWrapper:
+            self._stdout.flush()
+
+        if type(self._stderr) is TextIOWrapper:
+            self._stderr.flush()
 
 
 class Service:
@@ -496,6 +506,16 @@ class Service:
         """
         return {process._parent_name: process.state for process in self._processes}
 
+    def flush(self) -> None:
+        """
+        Flushes the stdout and stderr buffers.
+        """
+        if type(self.stdout) is TextIOWrapper:
+            self.stdout.flush()
+
+        if type(self.stderr) is TextIOWrapper:
+            self.stderr.flush()
+
 
 class ServiceHandler:
     """
@@ -628,3 +648,13 @@ class ServiceHandler:
         """
         self._config = self.Config(**config)
         return self.config
+
+    def flush(self, service_name: str) -> None:
+        """
+        Flushes the stdout and stderr buffers of the given service.
+        """
+        for service in self._services:
+            if service.config.name == service_name:
+                service.flush()
+                return
+        logger.warning(f"Service {service_name} not found.")

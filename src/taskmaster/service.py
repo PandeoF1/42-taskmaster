@@ -234,7 +234,6 @@ class SubProcess:
             logger.info(
                 f"Restarting process {self._parent_name} with pid: {self._process.pid}"
             )
-            await asyncio.sleep(self._retries + 1)
             self.retry()
             await self.start(retries=retries, starttime=starttime)
         else:
@@ -385,6 +384,7 @@ class Service:
             and subprocess.retries < self._config.startretries
         ):
             logger.debug(f"{self._config.name}: Checking if an autorestart is required")
+            await asyncio.sleep(1)
             subprocess = await subprocess.autorestart(
                 exitcodes=self._config.exitcodes,
                 retries=self._config.startretries,
@@ -396,7 +396,7 @@ class Service:
                 return
             await subprocess.wait()
 
-        if subprocess.retries > self._config.startretries:
+        if subprocess.retries >= self._config.startretries:
             logger.error(f"{self._config.name}: Max retry attempt exceeded")
             subprocess._state = SubProcess.State.FATAL
 

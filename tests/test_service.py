@@ -27,7 +27,7 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             dict(Service.Config(**config)),
         )
 
-    async def test_start(self):
+    async def test_start_async(self):
         config = self.config
         service = Service(**config)
         asyncio.create_task(service.start())
@@ -36,7 +36,23 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(1)
         self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
 
-    async def test_stop(self):
+    async def test_start_await(self):
+        config = self.config
+        service = Service(**config)
+        await service.start()
+        self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
+
+    async def test_stop_async(self):
+        config = self.config
+        service = Service(**config)
+        asyncio.create_task(service.start())
+        await asyncio.sleep(1.1)
+        self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
+        asyncio.create_task(service.stop())
+        await asyncio.sleep(1)
+        self.assertEqual(service.status, {"sleep all": SubProcess.State.STOPPED})
+
+    async def test_stop_await(self):
         config = self.config
         service = Service(**config)
         asyncio.create_task(service.start())
@@ -125,14 +141,12 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
         await asyncio.sleep(1)
         self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         self.assertEqual(service.status, {"sleep all": SubProcess.State.STARTING})
         await asyncio.sleep(1)
         self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
         await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
-        await asyncio.sleep(1)
-        self.assertNotEqual(service.status, {"sleep all": SubProcess.State.STARTING})
+        self.assertEqual(service.status, {"sleep all": SubProcess.State.FATAL})
 
     async def test_autostart(self):
         config = self.config

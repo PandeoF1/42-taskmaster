@@ -438,6 +438,7 @@ class Service:
 
         self._create_subprocesses(num=self._config.numprocs - len(self._processes))
         self._start_tasks: List[asyncio.Task] = []
+        self._wait_tasks: List[asyncio.Task] = []
         for process in self._processes:
             self._start_tasks += [
                 asyncio.create_task(
@@ -447,7 +448,12 @@ class Service:
                     )
                 )
             ]
-            asyncio.create_task(self._on_subprocess_started(self._start_tasks[-1]))
+            self._wait_tasks += [
+                asyncio.create_task(self._on_subprocess_started(self._start_tasks[-1]))
+            ]
+
+        for task in self._start_tasks:
+            await task
 
     async def stop(self) -> None:
         """
@@ -456,14 +462,24 @@ class Service:
         for task in self._start_tasks:
             task.cancel()
 
+        for task in self._wait_tasks:
+            task.cancel()
+
         self._start_tasks = []
+        self._wait_tasks = []
+        _stop_tasks: List[asyncio.Task] = []
 
         for process in self._processes:
-            asyncio.create_task(
-                process.stop(
-                    stopsignal=self._config.stopsignal, stoptime=self._config.stoptime
+            _stop_tasks += [
+                asyncio.create_task(
+                    process.stop(
+                        stopsignal=self._config.stopsignal,
+                        stoptime=self._config.stoptime,
+                    )
                 )
-            )
+            ]
+
+        await asyncio.gather(*_stop_tasks)
 
     async def restart(self) -> None:
         """

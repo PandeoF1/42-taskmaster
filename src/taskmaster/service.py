@@ -73,12 +73,12 @@ class SubProcess:
         """
         return self._retries
 
-    def retry(self) -> Self:
+    @retries.setter
+    def retries(self, value: int) -> None:
         """
-        Increments the number of retries of the subprocess.
+        Sets the number of retries of the subprocess.
         """
-        self._retries += 1
-        return self
+        self._retries = value
 
     async def _poll(self) -> int | None:
         if not self._process:
@@ -138,7 +138,7 @@ class SubProcess:
 
             except Exception as e:
                 retries -= 1
-                self.retry()
+                self.retries += 1
                 self._state = self.State.BACKOFF
                 logger.error(f"Failed to start process {self._parent_name}")
                 logger.debug(e)
@@ -190,6 +190,9 @@ class SubProcess:
         if self._process is None or (
             self._state != self.State.RUNNING and self._state != self.State.STARTING
         ):
+            logger.warning(
+                f"Process {self._parent_name} with pid {self._process.pid if self._process else None}: Stopped called when the process is not running"
+            )
             return self
 
         self._process.send_signal(stopsignal.value)
@@ -200,6 +203,7 @@ class SubProcess:
                 break
         if not await self._poll():
             self._process.kill()
+        self.retries = 0
         self._state = self.State.STOPPED
         return self
 
@@ -236,7 +240,7 @@ class SubProcess:
             logger.info(
                 f"Restarting process {self._parent_name} with pid: {self._process.pid}"
             )
-            self.retry()
+            self.retries += 1
             await self.start(retries=retries, starttime=starttime)
         else:
             logger.debug(
@@ -402,7 +406,11 @@ class Service:
             logger.error(f"{self._config.name}: Max retry attempt exceeded")
             subprocess._state = SubProcess.State.FATAL
 
+        subprocess.retries = 0
+        logger.debug(f"Removing task {task} from start_tasks")
         self._start_tasks.remove(task)
+        logger.debug(f"Removing subprocess {subprocess} from processes")
+        self._processes.remove(subprocess)
 
     def _create_subprocesses(self, num: int) -> None:
         for _ in range(num):
@@ -580,7 +588,6 @@ class ServiceHandler:
         """
         logger.info("Autostarting services.")
         for service in self._services:
-            logger.debug(f"Autostarting service: {service.config.name}")
             asyncio.create_task(service.autostart())
 
     @property

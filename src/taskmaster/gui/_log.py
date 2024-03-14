@@ -84,7 +84,7 @@ def log(self, log: LogReader = None) -> None:
         self.win["log"].addstr(
             self.height - 3,
             4,
-            f"Press 'q' to go back. - (↑•↓•←•→ to navigate) {log._start}",
+            f"Press 'q' to go back. - (↑•↓•←•→ to navigate)",
         )
         self.box("log")
 

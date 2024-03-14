@@ -1,0 +1,16 @@
+services:
+  - name: random exit
+    cmd: "./random_exit.out"
+    numprocs: 32
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_exit.stdout
+    stderr: /tmp/random_exit.stderr

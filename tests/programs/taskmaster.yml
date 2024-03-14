@@ -31,10 +31,10 @@ services:
     stdout: /tmp/umask077.stdout
     stderr: /tmp/umask077.stderr
 
-  - name: umask 707
+  - name: umask 007
     cmd: "./umask.out"
     numprocs: 1
-    umask: 0707
+    umask: 007
     workingdir: ./tests/programs
     autostart: true
     autorestart: unexpected
@@ -44,8 +44,8 @@ services:
     starttime: 0
     stopsignal: USR1
     stoptime: 0
-    stdout: /tmp/umask707.stdout
-    stderr: /tmp/umask707.stderr
+    stdout: /tmp/umask007.stdout
+    stderr: /tmp/umask007.stderr
 
   - name: stdout
     cmd: "./stdout.out"

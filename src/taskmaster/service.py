@@ -391,7 +391,7 @@ class Service:
             and subprocess.retries < self._config.startretries
         ):
             logger.debug(f"{self._config.name}: Checking if an autorestart is required")
-            await asyncio.sleep(1)
+            await asyncio.sleep(subprocess.retries + 1)
             subprocess = await subprocess.autorestart(
                 exitcodes=self._config.exitcodes,
                 retries=self._config.startretries,

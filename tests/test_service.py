@@ -5,6 +5,7 @@ from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
 import os
 
+
 class TestService(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.config = Config(
@@ -125,28 +126,44 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(1)
         self.assertNotEqual(service.status, {"sleep all": SubProcess.State.STARTING})
 
-    async def test_autorestart_with_retries(self):
+    async def test_autorestart_with_2_retries(self):
+        retries = 2
         config = self.config
         config["autorestart"] = "unexpected"
         config["exitcodes"] = [42]
-        config["startretries"] = 2
+        config["startretries"] = retries
         service = Service(**config)
         asyncio.create_task(service.start())
-        await asyncio.sleep(1.1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.STARTING})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.STARTING})
-        await asyncio.sleep(1)
-        self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
+        for i in range(retries + 1):
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.STARTING})
+            await asyncio.sleep(1)
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
+            await asyncio.sleep(1)
+            if i == retries:
+                break
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
+            await asyncio.sleep(i + 1)
+        self.assertEqual(service.status, {"sleep all": SubProcess.State.FATAL})
+
+    async def test_autorestart_with_5_retries(self):
+        retries = 5
+        config = self.config
+        config["autorestart"] = "unexpected"
+        config["exitcodes"] = [42]
+        config["startretries"] = retries
+        service = Service(**config)
+        asyncio.create_task(service.start())
+        await asyncio.sleep(0.1)
+        for i in range(retries + 1):
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.STARTING})
+            await asyncio.sleep(1)
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.RUNNING})
+            await asyncio.sleep(1)
+            if i == retries:
+                break
+            self.assertEqual(service.status, {"sleep all": SubProcess.State.EXITED})
+            await asyncio.sleep(i + 1)
         self.assertEqual(service.status, {"sleep all": SubProcess.State.FATAL})
 
     async def test_autostart(self):
@@ -157,7 +174,6 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.autostart())
         await asyncio.sleep(0.1)
         self.assertNotEqual(service.status, {"sleep all": SubProcess.State.STOPPED})
-
 
     async def test_umask_003(self):
         config = Config("./tests/config_templates/valid/umask03.yml").services[0]

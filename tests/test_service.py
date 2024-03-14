@@ -251,3 +251,13 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(0.5)
         print(service.status)
         self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})
+
+    async def test_unexpected_restart_starttries_1(self):
+        config = Config("./tests/config_templates/valid/unexpected_restart_starttries_1.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(6)
+        with open("/tmp/random_start_time.stdout") as f:
+            print(len(f.readlines()))
+            self.assertTrue(len(f.readlines()) <= 15)
+        self.assertEqual(service.status, {"unexpected restart starttries 1": SubProcess.State.FATAL})

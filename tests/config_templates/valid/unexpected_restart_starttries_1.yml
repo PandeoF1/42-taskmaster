@@ -1,0 +1,16 @@
+services:
+  - name: random start time
+    cmd: "./random_sleep.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 1
+    startretries: 1
+    starttime: 2
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_start_time.stdout
+    stderr: /tmp/random_start_time.stderr

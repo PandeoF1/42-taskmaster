@@ -2,6 +2,7 @@ import curses
 from .table import table
 from ..utils.logger import logger
 from ..utils.log_reader import LogReader
+import asyncio
 
 
 def services(self) -> None:
@@ -93,6 +94,11 @@ def services(self) -> None:
             4,
             "Press 'q' to go back. - (↑•↓•←•→ to navigate, e to open stderr, o to open stdout)",
         )
+        self.win["services"].addstr(
+            self.height - 2,
+            4 + 24,
+            "(s to start, k to stop, r to restart)",
+        )
         self.win["services"].refresh()
     except curses.error as e:
         logger.error(f"Failed to load services page. {e}")
@@ -171,9 +177,39 @@ def services_nav(self, key: int) -> None:
                     )
                 )
                 return
+            # key s
+            if key == 115:
+                asyncio.create_task(
+                    self.service_handler.start(
+                        self.config.services[
+                            self.win_data["services"]["selected_line"]
+                        ]["name"]
+                    )
+                )
+            # key k
+            if key == 107:
+                asyncio.create_task(
+                    self.service_handler.stop(
+                        self.config.services[
+                            self.win_data["services"]["selected_line"]
+                        ]["name"]
+                    )
+                )
+            # key r
+            if key == 114:
+                asyncio.create_task(
+                    self.service_handler.restart(
+                        self.config.services[
+                            self.win_data["services"]["selected_line"]
+                        ]["name"]
+                    )
+                )
         except FileNotFoundError as e:
             self.log_not_found(e.filename)
             return
+        except Exception as e:
+            logger.error(e)
+            self.log_error()
         self.services()
     except curses.error as e:
         logger.error(f"[Services] Failed to navigate. {e}")

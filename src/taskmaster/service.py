@@ -410,8 +410,6 @@ class Service:
         subprocess.retries = 0
         logger.debug(f"Removing task {task} from start_tasks")
         self._start_tasks.remove(task)
-        logger.debug(f"Removing subprocess {subprocess} from processes")
-        self._processes.remove(subprocess)
 
     def _create_subprocesses(self, num: int) -> None:
         for _ in range(num):

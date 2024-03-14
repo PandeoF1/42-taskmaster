@@ -4,7 +4,7 @@ services:
     numprocs: 1
     umask: 077
     workingdir: /tmp
-    autostart: true
+    autostart: false
     autorestart: never
     exitcodes:
       - 0

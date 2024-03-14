@@ -1,15 +1,16 @@
 import unittest
 import asyncio
-
+import pytest
 from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
-
+import os
 
 class TestService(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.config = Config(
             "./tests/config_templates/valid/service_reference.yaml"
         ).services[0]
+        # execute make in ./programs
 
     async def test_config_getter(self):
         config = self.config
@@ -156,3 +157,81 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.autostart())
         await asyncio.sleep(0.1)
         self.assertNotEqual(service.status, {"sleep all": SubProcess.State.STOPPED})
+
+
+    async def test_umask_003(self):
+        config = Config("./tests/config_templates/valid/umask03.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"umask 03": SubProcess.State.EXITED})
+        with open("/tmp/umask003.stdout") as f:
+            self.assertEqual(f.read(), "---- umask test ----\numask: 03\n")
+
+    async def test_umask_077(self):
+        config = Config("./tests/config_templates/valid/umask077.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"umask 077": SubProcess.State.EXITED})
+        with open("/tmp/umask077.stdout") as f:
+            self.assertEqual(f.read(), "---- umask test ----\numask: 077\n")
+
+    async def test_umask_007(self):
+        config = Config("./tests/config_templates/valid/umask07.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"umask 07": SubProcess.State.EXITED})
+        with open("/tmp/umask007.stdout") as f:
+            self.assertEqual(f.read(), "---- umask test ----\numask: 07\n")
+
+    async def test_stdout(self):
+        config = Config("./tests/config_templates/valid/stdout.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"stdout": SubProcess.State.EXITED})
+        with open("/tmp/stdout.stdout") as f:
+            self.assertTrue("---- stdout test ----" in f.read())
+
+    async def test_stderr(self):
+        config = Config("./tests/config_templates/valid/stderr.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"stderr": SubProcess.State.EXITED})
+        with open("/tmp/stderr.stderr") as f:
+            self.assertTrue("---- stderr test ----" in f.read())
+
+    async def test_stdout_no_file(self):
+        os.remove("/tmp/stdout.stdout")
+        config = Config("./tests/config_templates/valid/stdout_no_file.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"stdout no file": SubProcess.State.EXITED})
+        with pytest.raises(FileNotFoundError):
+            with open("/tmp/stdout.stdout") as f:
+                f.read()
+        self.assertTrue(True)
+
+    async def test_stderr_no_file(self):
+        os.remove("/tmp/stderr.stderr")
+        config = Config("./tests/config_templates/valid/stderr_no_file.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.1)
+        self.assertEqual(service.status, {"stderr no file": SubProcess.State.EXITED})
+        with pytest.raises(FileNotFoundError):
+            with open("/tmp/stderr.stderr") as f:
+                f.read()
+        self.assertTrue(True)
+
+    async def test_random_exit(self):
+        config = Config("./tests/config_templates/valid/random_exit.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.5)
+        print(service.status)
+        self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})

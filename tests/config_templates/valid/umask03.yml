@@ -1,0 +1,16 @@
+services:
+  - name: umask 03
+    cmd: "./umask.out"
+    numprocs: 1
+    umask: 03
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/umask003.stdout
+    stderr: /tmp/umask003.stderr

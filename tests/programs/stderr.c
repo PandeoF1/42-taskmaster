@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv)
 {
-    printf("---- stdout test ----\n");
+    fprintf(stderr, "---- stderr test ----\n");
     for (int i = 0; i < 10; i++) fprintf(stderr, "%d\n", i);
     return 0;
 }

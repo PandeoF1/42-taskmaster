@@ -214,10 +214,10 @@ class TestService(unittest.IsolatedAsyncioTestCase):
                 f.read()
         self.assertTrue(True)
 
-#    async def test_random_exit(self):
-#        config = Config("./tests/config_templates/valid/random_exit.yml").services[0]
-#        service = Service(**config)
-#        await service.start()
-#        await asyncio.sleep(0.5)
-#        print(service.status)
-#        self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})
+    async def test_random_exit(self):
+        config = Config("./tests/config_templates/valid/random_exit.yml").services[0]
+        service = Service(**config)
+        await service.start()
+        await asyncio.sleep(0.5)
+        print(service.status)
+        self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})

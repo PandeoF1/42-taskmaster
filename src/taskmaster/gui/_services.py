@@ -217,7 +217,9 @@ def services_destroy(self):
             self.win_data["services_destroy"]["selected"] = "services_destroy"
         self.win_active = "services_destroy"
         self.box("services_destroy")
-        self.win["services_destroy"].addstr(3, 4, "Taskmaster - Destruction of services")
+        self.win["services_destroy"].addstr(
+            3, 4, "Taskmaster - Destruction of services"
+        )
         self.win["services_destroy"].addstr(
             int(self.height / 2),
             int(self.width / 2 - 31),

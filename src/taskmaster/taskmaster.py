@@ -14,10 +14,12 @@ from .utils.config import Config
 need_reload = False
 need_exit = False
 
+
 def signal_handler(sig: Any, frame: Any) -> None:
     logger.warning("CTRL+C detected. Exiting...")
     global need_exit
     need_exit = True
+
 
 def reload_config(sig: Any, frame: Any) -> None:
     logger.info("Reloading configuration. (SIGHUP)")

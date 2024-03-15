@@ -66,6 +66,13 @@ class SubProcess:
         """
         return self._state
 
+    @state.setter
+    def state(self, value: State) -> None:
+        """
+        Sets the state of the subprocess.
+        """
+        self._state = value
+
     @property
     def retries(self) -> int:
         """
@@ -158,7 +165,7 @@ class SubProcess:
 
         return self
 
-    async def wait(self) -> Self:
+    async def wait(self, startretries: int) -> Self:
         """
         Waits for the subprocess to finish.
 
@@ -176,8 +183,12 @@ class SubProcess:
             f"Waiting for process {self._parent_name}-{self._process.pid} to finish."
         )
         await self._process.wait()
-        logger.info(f"Process {self._parent_name}-{self._process.pid} exited.")
-        self._state = self.State.EXITED
+        logger.info(f"Process {self._parent_name}-{self._process.pid} ended.")
+        if self.retries > 0 and self.retries >= startretries:
+            logger.error(f"{self._parent_name}: Max retry attempt exceeded")
+            self.state = SubProcess.State.FATAL
+        else:
+            self.state = SubProcess.State.EXITED
         return self
 
     async def stop(self, stopsignal: str | Signal, stoptime: int) -> Self:
@@ -192,7 +203,8 @@ class SubProcess:
             self._state != self.State.RUNNING and self._state != self.State.STARTING
         ):
             logger.warning(
-                f"Process {self._parent_name} with pid {self._process.pid if self._process else None}: Stopped called when the process is not running"
+                f"Process {self._parent_name} with pid "
+                f"{self._process.pid if self._process else None}: Stopped called when the process is not running"
             )
             return self
 
@@ -407,7 +419,7 @@ class Service:
         Wait for the subprocess to run and autorestart if necessary.
         """
         subprocess: SubProcess = await task
-        await subprocess.wait()
+        await subprocess.wait(self._config.startretries)
         while (
             subprocess.state == SubProcess.State.EXITED
             and subprocess.retries < self._config.startretries
@@ -423,11 +435,7 @@ class Service:
             if subprocess.state == SubProcess.State.EXITED:
                 logger.debug(f"{self._config.name}: No autorestart required")
                 return
-            await subprocess.wait()
-
-        if subprocess.retries >= self._config.startretries:
-            logger.error(f"{self._config.name}: Max retry attempt exceeded")
-            subprocess._state = SubProcess.State.FATAL
+            await subprocess.wait(self._config.startretries)
 
         subprocess.retries = 0
         logger.debug(f"Removing task {task} from start_tasks")

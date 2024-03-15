@@ -49,6 +49,7 @@ async def interfaces(stdscr, config) -> None:
             elif interface.log_nav(key) == -1:
                 break
         # Stop all services
+        interface.services_destroy()
         interface.end()
         task.cancel()
     except Exception as e:

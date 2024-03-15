@@ -207,3 +207,22 @@ def services_nav(self, key: int) -> None:
         self.services()
     except curses.error as e:
         logger.error(f"[Services] Failed to navigate. {e}")
+
+
+def services_destroy(self):
+    try:
+        if "services_destroy" not in self.win:
+            self.win["services_destroy"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win_data["services_destroy"] = dict()
+            self.win_data["services_destroy"]["selected"] = "services_destroy"
+        self.win_active = "services_destroy"
+        self.box("services_destroy")
+        self.win["services_destroy"].addstr(3, 4, "Taskmaster - Destruction of services")
+        self.win["services_destroy"].addstr(
+            int(self.height / 2),
+            int(self.width / 2 - 31),
+            "Destruction of services in progress...",
+        )
+        self.win["services_destroy"].refresh()
+    except curses.error as e:
+        logger.error(f"[Services] Failed to load services destroy page. {e}")

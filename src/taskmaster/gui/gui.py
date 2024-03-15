@@ -37,7 +37,7 @@ class Gui:
 
     from ._utils import screen_too_small, update_size, clear, box
     from ._default import default, default_nav
-    from ._services import services, services_nav
+    from ._services import services, services_nav, services_destroy
     from ._log import log, log_nav, log_not_found, log_error
     from ._configuration import (
         configuration,

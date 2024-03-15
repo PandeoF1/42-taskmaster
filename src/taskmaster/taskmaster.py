@@ -12,13 +12,12 @@ from .gui.gui import Gui
 from .utils.config import Config
 
 need_reload = False
-
+need_exit = False
 
 def signal_handler(sig: Any, frame: Any) -> None:
     logger.warning("CTRL+C detected. Exiting...")
-    # TODO: stop all services
-    sys.exit(0)
-
+    global need_exit
+    need_exit = True
 
 def reload_config(sig: Any, frame: Any) -> None:
     logger.info("Reloading configuration. (SIGHUP)")
@@ -34,7 +33,7 @@ def init_signal() -> None:
 
 async def interfaces(stdscr, config) -> None:
     logger.info("Starting taskmaster.")
-    global need_reload
+    global need_reload, need_exit
     try:
         interface = Gui()
         interface.service_handler = ServiceHandler(
@@ -48,7 +47,7 @@ async def interfaces(stdscr, config) -> None:
             interface.update_size()
             key = interface.win[interface.win_active].getch()
             stop = interface.default_nav(key)
-            if stop == -1:
+            if stop == -1 or need_exit:
                 break
             elif stop:
                 continue

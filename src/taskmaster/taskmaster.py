@@ -8,7 +8,7 @@ import random
 
 from .utils.logger import logger
 from .gui.gui import Gui
-from .utils.config import Config
+from .utils.config import Config, generate_config
 
 # log = logger("taskmaster")
 
@@ -68,15 +68,15 @@ async def taskmaster(config: Config) -> None:
     # logger.close()
 
 
-async def services(config: Config) -> None:
-    pass
-
-
 def main() -> None:
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--file", help="Path to the configuration file")
+        parser.add_argument("-g", "--generate", help="Generate a configuration file at path", type=str)
         args = parser.parse_args()
+        if args.generate:
+            generate_config(args.generate)
+            return
         config = Config(args.file if args.file else "taskmaster.yml")
     except Exception as e:
         interface = Gui()

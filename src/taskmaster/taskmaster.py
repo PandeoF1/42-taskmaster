@@ -66,8 +66,8 @@ async def interfaces(stdscr, config) -> None:
                 interface.config = config
                 interface.configuration_success()
                 interface.default()
-        await interface.service_handler.delete()
         interface.services_destroy()
+        await interface.service_handler.delete()
         await asyncio.sleep(2)
         interface.end()
         task.cancel()

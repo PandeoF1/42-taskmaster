@@ -11,6 +11,8 @@ from .utils.logger import logger
 from .gui.gui import Gui
 from .utils.config import Config
 
+need_reload = False
+
 
 def signal_handler(sig: Any, frame: Any) -> None:
     logger.warning("CTRL+C detected. Exiting...")
@@ -18,13 +20,21 @@ def signal_handler(sig: Any, frame: Any) -> None:
     sys.exit(0)
 
 
+def reload_config(sig: Any, frame: Any) -> None:
+    logger.info("Reloading configuration. (SIGHUP)")
+    global need_reload
+    need_reload = True
+
+
 def init_signal() -> None:
     logger.info("Initializing signal handler.")
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGHUP, reload_config)
 
 
 async def interfaces(stdscr, config) -> None:
     logger.info("Starting taskmaster.")
+    global need_reload
     try:
         interface = Gui()
         interface.service_handler = ServiceHandler(
@@ -48,6 +58,13 @@ async def interfaces(stdscr, config) -> None:
                 break
             elif interface.log_nav(key) == -1:
                 break
+            if need_reload:
+                need_reload = False
+                config = Config(config.path)
+                # ici reload service handler
+                interface.config = config
+                interface.configuration_success()
+                interface.default()
         await interface.service_handler.delete()
         interface.services_destroy()
         await asyncio.sleep(2)

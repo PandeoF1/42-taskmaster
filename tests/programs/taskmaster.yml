@@ -173,7 +173,23 @@ services:
     stdout: /tmp/random_exit.stdout
     stderr: /tmp/random_exit.stderr
 
-  - name: random sleep retry
+  - name: random sleep retry exited
+    cmd: "./random_sleep.out"
+    numprocs: 6
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 10
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 0
+    stdout: /tmp/random_exit.stdout
+    stderr: /tmp/random_exit.stderr
+
+  - name: random sleep retry fatal
     cmd: "./random_sleep.out"
     numprocs: 6
     umask: 077
@@ -230,7 +246,7 @@ services:
     autorestart: unexpected
     exitcodes:
       - 0
-    startretries: 10
+    startretries: 1
     starttime: 0
     stopsignal: USR1
     stoptime: 0

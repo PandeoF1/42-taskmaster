@@ -3,6 +3,7 @@ import asyncio
 import sys
 import signal
 import argparse
+from .utils.email import Email
 from typing import Any
 
 from .service import ServiceHandler
@@ -37,6 +38,9 @@ async def interfaces(stdscr, config) -> None:
     logger.info("Starting taskmaster.")
     global need_reload, need_exit
     try:
+        if config.email:
+            email = Email(config)
+            asyncio.create_task(email.send("hello", "Taskmaster started."))
         interface = Gui()
         interface.service_handler = ServiceHandler(
             **dict({"services": config.services})

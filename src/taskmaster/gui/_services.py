@@ -169,27 +169,33 @@ def services_nav(self, key: int) -> None:
             if key == 115:
                 asyncio.create_task(
                     self.service_handler.start(
-                        self.config.services[
-                            self.win_data["services"]["selected_line"]
-                        ]["name"]
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
                     )
                 )
             # key k
             if key == 107:
                 asyncio.create_task(
                     self.service_handler.stop(
-                        self.config.services[
-                            self.win_data["services"]["selected_line"]
-                        ]["name"]
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
                     )
                 )
             # key r
             if key == 114:
                 asyncio.create_task(
                     self.service_handler.restart(
-                        self.config.services[
-                            self.win_data["services"]["selected_line"]
-                        ]["name"]
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
                     )
                 )
         except FileNotFoundError as e:

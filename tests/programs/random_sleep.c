@@ -9,10 +9,14 @@
 
 int main(int argc, char **argv)
 {
-    int max_sleep = atoi(argv[1]);
+    int max_sleep;
+    if (argc >= 2)
+        max_sleep = atoi(argv[1]);
+    else 
+        max_sleep = 4;
     printf("---- random sleep ----\n");
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+gettimeofday(&tv, NULL);
     srand(tv.tv_usec);
     int random = rand() % max_sleep;
     printf("pid: %d sleep: %d\n", getpid(), random);

@@ -446,6 +446,10 @@ class Service:
                 process.state != SubProcess.State.RUNNING
                 and process.state != SubProcess.State.STARTING
             ):
+                if process._process:
+                    logger.debug(
+                        f"Removing process {process._parent_name} with pid {process._process.pid} from processes"
+                    )
                 self._processes.remove(process)
 
         self._create_subprocesses(num=self._config.numprocs - len(self._processes))

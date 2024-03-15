@@ -445,6 +445,7 @@ class Service:
             if (
                 process.state != SubProcess.State.RUNNING
                 and process.state != SubProcess.State.STARTING
+                and process.state != SubProcess.State.STOPPING
             ):
                 if process._process:
                     logger.debug(

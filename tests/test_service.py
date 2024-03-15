@@ -267,3 +267,24 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             service.status,
             {"exits before starttime 1 retry": SubProcess.State.FATAL},
         )
+
+    async def test_start_when_stopping_doesnt_work(self):
+        config = Config(
+            "./tests/config_templates/valid/test_start_when_stopping.yml"
+        ).services[0]
+        service = Service(**config)
+        asyncio.create_task(service.start())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            service.status, {"start when stopping": SubProcess.State.RUNNING}
+        )
+        asyncio.create_task(service.stop())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            service.status, {"start when stopping": SubProcess.State.STOPPING}
+        )
+        asyncio.create_task(service.start())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            service.status, {"start when stopping": SubProcess.State.STOPPING}
+        )

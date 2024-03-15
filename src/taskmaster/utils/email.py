@@ -1,5 +1,6 @@
-import smtplib
+from smtplib import SMTP
 from .logger import logger
+import threading
 
 
 class Email:
@@ -13,28 +14,37 @@ class Email:
         """
         self.config = config
 
-    def send(self, subject, message):  # Maybe need to be async
+    async def send(self, subject, message):  # Maybe need to be async
         """
         Send an email
         """
-        try:
-            if self.config.email:
-                server = smtplib.SMTP(
-                    self.config.email["smtp_server"], self.config.email["smtp_port"]
-                )
+        email_thread = threading.Thread(
+            target=send_email, args=(self.config, subject, message)
+        )
+        email_thread.start()
+
+
+def send_email(config, subject, message):
+    """
+    Send an email
+    """
+    try:
+        if config.email:
+            with SMTP(
+                config.email["smtp_server"], config.email["smtp_port"]
+            ) as server:
                 server.starttls()
                 server.login(
-                    self.config.email["smtp_email"], self.config.email["smtp_password"]
+                    config.email["smtp_email"], config.email["smtp_password"]
                 )
                 msg = f"Subject: {subject}\n\n{message}"
                 server.sendmail(
-                    self.config.email["smtp_email"], self.config.email["to"], msg
+                    config.email["smtp_email"], config.email["to"], msg
                 )
-                server.quit()
                 return True
-            else:
-                logger.warning("No email configuration found")
-                return False
-        except Exception as e:
-            logger.error(f"Error while sending email: {e}")
+        else:
+            logger.warning("No email configuration found")
             return False
+    except Exception as e:
+        logger.error(f"Error while sending email: {e}")
+        return False

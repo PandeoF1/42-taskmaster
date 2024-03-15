@@ -60,7 +60,7 @@ def default_nav(self, key: int) -> int:
                     config = Config(self.config.path)
                     self.config = config
                     # ici reload service handler
-                    interface.service_handler.config = config
+                    self.service_handler.config = dict({"services": config.services})
                     self.configuration_success()
                     self.default()
                 except Exception as e:

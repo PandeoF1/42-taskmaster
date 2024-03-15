@@ -78,9 +78,7 @@ async def interfaces(stdscr, config) -> None:
 async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
-    # Execute interfaces and test in parallel
     await asyncio.gather(curses.wrapper(interfaces, config))
-    # logger.close()
 
 
 def main() -> None:

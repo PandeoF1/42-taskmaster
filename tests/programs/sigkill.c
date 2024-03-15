@@ -16,8 +16,10 @@ int main(int argc, char **argv)
 {
 	printf("---- sigkill test ----\n");
 	signal(SIGUSR1, sigusr1_handler);
+	int count = 0;
 	while (1) {
-		printf("Waiting for SIGUSR1 signal... %d\n", getpid());
+		printf("Waiting for SIGUSR1 signal... %d %ds\n", getpid(), count);
+		count += 1;
 		sleep(1);
 		fflush(stdout);
 	}

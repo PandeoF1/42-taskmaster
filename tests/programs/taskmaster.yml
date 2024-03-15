@@ -150,7 +150,7 @@ services:
     autorestart: unexpected
     exitcodes:
       - 0
-    startretries: 1
+    startretries: 0
     starttime: 0
     stopsignal: USR1
     stoptime: 0
@@ -166,7 +166,7 @@ services:
     autorestart: unexpected
     exitcodes:
       - 0
-    startretries: 1
+    startretries: 0
     starttime: 0
     stopsignal: USR1
     stoptime: 0
@@ -252,3 +252,21 @@ services:
     stoptime: 10
     stdout: /tmp/sigkill.stdout
     stderr: /tmp/sigkill.stderr
+
+  - name: env
+    cmd: "./env.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: unexpected
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 10
+    stdout: /tmp/env.stdout
+    stderr: /tmp/env.stderr
+    env:
+      a: 'b'

@@ -224,5 +224,5 @@ def services_destroy(self):
             "Destruction of services in progress...",
         )
         self.win["services_destroy"].refresh()
-    except curses.error as e:
+    except Exception as e:
         logger.error(f"[Services] Failed to load services destroy page. {e}")

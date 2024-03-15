@@ -49,6 +49,8 @@ async def interfaces(stdscr, config) -> None:
             elif interface.log_nav(key) == -1:
                 break
         await interface.service_handler.delete()
+        interface.services_destroy()
+        await asyncio.sleep(2)
         interface.end()
         task.cancel()
     except Exception as e:

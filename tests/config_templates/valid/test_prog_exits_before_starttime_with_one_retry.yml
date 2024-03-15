@@ -1,6 +1,6 @@
 services:
-  - name: random start time
-    cmd: "./random_sleep.out"
+  - name: exits before starttime 1 retry
+    cmd: "./random_sleep.out 2"
     numprocs: 6
     umask: 077
     workingdir: ./tests/programs

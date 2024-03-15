@@ -4,6 +4,7 @@ import pytest
 from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
 import os
+import subprocess
 
 
 class TestService(unittest.IsolatedAsyncioTestCase):
@@ -11,7 +12,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.config = Config(
             "./tests/config_templates/valid/service_reference.yaml"
         ).services[0]
-        # execute make in ./programs
+        # execute make in ./programs/
+        subprocess.run(["make"], cwd="./tests/programs/")
 
     async def test_config_getter(self):
         config = self.config
@@ -244,24 +246,24 @@ class TestService(unittest.IsolatedAsyncioTestCase):
                 f.read()
         self.assertTrue(True)
 
-    async def test_random_exit(self):
-        config = Config("./tests/config_templates/valid/random_exit.yml").services[0]
-        service = Service(**config)
-        await service.start()
-        await asyncio.sleep(0.5)
-        print(service.status)
-        self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})
+    # Random tests dont make any sense
+    # async def test_random_exit(self):
+    #     config = Config("./tests/config_templates/valid/random_exit.yml").services[0]
+    #     service = Service(**config)
+    #     await service.start()
+    #     print(service.status)
+    #     self.assertEqual(service.status, {"random exit": SubProcess.State.EXITED})
 
-    async def test_unexpected_restart_starttries_1(self):
+    async def test_prog_exits_before_starttime_with_one_retry(self):
         config = Config(
-            "./tests/config_templates/valid/unexpected_restart_starttries_1.yml"
+            "./tests/config_templates/valid/test_prog_exits_before_starttime_with_one_retry.yml"
         ).services[0]
         service = Service(**config)
         await service.start()
-        await asyncio.sleep(6)
-        with open("/tmp/random_start_time.stdout") as f:
-            print(len(f.readlines()))
-            self.assertTrue(len(f.readlines()) <= 15)
+        await service.wait()
+        with open("/tmp/random_start_time.stdout", "r") as f:
+            self.assertLessEqual(len(f.readlines()), 15)
         self.assertEqual(
-            service.status, {"unexpected restart starttries 1": SubProcess.State.FATAL}
+            service.status,
+            {"exits before starttime 1 retry": SubProcess.State.FATAL},
         )

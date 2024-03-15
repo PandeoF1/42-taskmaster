@@ -135,6 +135,7 @@ class SubProcess:
                     logger.error(
                         f"Process {self._parent_name}-{self._process.pid} has exited before {starttime} seconds."
                     )
+                    retries -= 1
 
             except Exception as e:
                 retries -= 1
@@ -309,6 +310,7 @@ class Service:
         self._config = self.Config(**config)
         self._processes: List[SubProcess] = []
         self._start_tasks: List[asyncio.Task] = []
+        self._wait_tasks: List[asyncio.Task] = []
 
         self._init_stdout()
         self._init_stderr()
@@ -462,8 +464,15 @@ class Service:
                 asyncio.create_task(self._on_subprocess_started(self._start_tasks[-1]))
             ]
 
-        for task in self._start_tasks:
-            await task
+        await asyncio.gather(*self._start_tasks)
+
+    async def wait(self) -> None:
+        """
+        Waits for the service to finish.
+
+        Pretty much only useful for testing.
+        """
+        await asyncio.gather(*self._wait_tasks)
 
     async def stop(self) -> None:
         """

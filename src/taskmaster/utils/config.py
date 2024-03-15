@@ -137,7 +137,7 @@ schema = {
                 },
                 "startretries": {
                     "type": "integer",
-                    "min": 1,
+                    "min": 0,
                     "max": 10,
                     "required": True,
                 },

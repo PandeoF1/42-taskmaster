@@ -67,6 +67,7 @@ async def interfaces(stdscr, config) -> None:
                 need_reload = False
                 config = Config(config.path)
                 # ici reload service handler
+                interface.service_handler.config = config
                 interface.config = config
                 interface.configuration_success()
                 interface.default()

@@ -51,13 +51,13 @@ class SubProcess:
         self._retries: int = 0
         self._lock: asyncio.Lock = asyncio.Lock()
 
-    # async def __del__(self) -> None:
-    #     """
-    #     Destructor for the SubProcess class.
-    #     """
-    #     if self._process is not None:
-    #         self._process.kill()
-    #         await self._process.wait()
+    async def delete(self) -> None:
+        """
+        Destructor for the SubProcess class.
+        """
+        if self._process is not None:
+            self._process.kill()
+            await self._process.wait()
 
     @property
     def state(self) -> State:
@@ -360,6 +360,16 @@ class Service:
 
     def __repr__(self) -> str:
         return f"Program(name={self._config.name}, command={self._config.cmd}, numprocs={self._config.numprocs})"
+
+    async def delete(self):
+        """
+        Destructor for the Service class.
+        """
+        for process in self._processes:
+            await process.delete()
+        self._processes.clear()
+        self._config = self.Config()
+        logger.debug(f"Service {self._config.name} deleted.")
 
     @property
     def config(self) -> Config:
@@ -672,3 +682,13 @@ class ServiceHandler:
                 service.flush()
                 return
         logger.warning(f"Service {service_name} not found.")
+
+    async def delete(self) -> None:
+        """
+        Destructor for the ServiceHandler class.
+        """
+        for service in self._services:
+            await service.delete()
+        self._services.clear()
+        self._config = self.Config()
+        logger.debug("ServiceHandler deleted.")

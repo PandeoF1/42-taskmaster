@@ -87,6 +87,40 @@ class SubProcess:
         """
         self._retries = value
 
+    @property
+    def config(self) -> Dict[str, Any]:
+        """
+        Gets the configuration parameters for the subprocess.
+
+        Returns:
+            The configuration parameters as a dictionary.
+        """
+        return {
+            "cmd": self._cmd,
+            "umask": self._umask,
+            "workingdir": self._workingdir,
+            "stdout": self._stdout,
+            "stderr": self._stderr,
+            "user": self._user,
+            "env": self._env,
+        }
+
+    @config.setter
+    def config(self, config: Dict[str, Any]) -> None:
+        """
+        Sets the configuration parameters for the subprocess.
+
+        Args:
+            config: The new configuration parameters as a dictionary.
+        """
+        self._cmd = config["cmd"]
+        self._umask = config["umask"]
+        self._workingdir = config["workingdir"]
+        self._stdout = config["stdout"]
+        self._stderr = config["stderr"]
+        self._user = config["user"]
+        self._env = config["env"]
+
     async def _poll(self) -> int | None:
         if not self._process:
             return
@@ -394,15 +428,39 @@ class Service:
         return self._config
 
     @config.setter
-    def config(self, config: Dict[Any, Any]) -> Config:
+    def config(self, config: Dict[Any, Any]) -> List[asyncio.Task]:
         """
         Sets the configuration parameters for the service.
 
         Args:
             config: The new configuration parameters as a dictionary.
         """
+        tasks: List[asyncio.Task] = []
+
+        for _ in range(config["numprocs"] - len(self._processes)):
+            process = self._processes.pop(0)
+            tasks.append(asyncio.create_task(process.delete()))
+
+        for _ in range(len(self._processes) - config["numprocs"]):
+            self._create_subprocesses(num=1)
+
+        for process in self._processes:
+            new_config = {
+                "cmd": config["cmd"],
+                "umask": config["umask"],
+                "workingdir": config["workingdir"],
+                "stdout": self.stdout,
+                "stderr": self.stderr,
+                "user": config["user"],
+                "env": config["env"],
+            }
+            if new_config != process.config:
+                asyncio.create_task(process.delete())
+                self._processes.remove(process)
+                self._create_subprocesses(num=1)
+
         self._config = self.Config(**config)
-        return self.config
+        return tasks
 
     async def autostart(self) -> None:
         """
@@ -442,6 +500,11 @@ class Service:
         self._start_tasks.remove(task)
 
     def _create_subprocesses(self, num: int) -> None:
+        """Batch create subprocesses.
+
+        Args:
+            num (int): The number of subprocesses to create.
+        """
         for _ in range(num):
             subprocess: SubProcess = SubProcess(
                 parent_name=self._config.name,
@@ -668,9 +731,9 @@ class ServiceHandler:
         return self._config
 
     @config.setter
-    def config(self, config: Dict[Any, Any]) -> Config:
+    def config(self, config: Dict[Any, Any]) -> List[asyncio.Task]:
         """
-        Sets the configuration parameters for the service.
+        Sets the configuration parameters for the service and reloads them.
 
         Args:
             config: The new configuration parameters as a dictionary.
@@ -678,8 +741,25 @@ class ServiceHandler:
         Returns:
             The configuration parameters.
         """
+        tasks: List[asyncio.Task] = []
+
+        for service in self._config.services:
+            # If the service is not in the list, add it
+            if service["name"] not in [s.config.name for s in self._services]:
+                self._services.append(Service(**dict(service)))
+            # If the service is in the list, update it
+            else:
+                for s in self._services:
+                    if s.config.name == service["name"]:
+                        s.config = dict(service)
+        # If the service is not in the list, remove it
+        for service in self._services:
+            if service.config not in [s["name"] for s in self._config.services]:
+                tasks.append(asyncio.create_task(service.delete()))
+                self._services.remove(service)
+        tasks.append(asyncio.create_task(self.autostart()))
         self._config = self.Config(**config)
-        return self.config
+        return tasks
 
     def flush(self, service_name: str) -> None:
         """
@@ -698,5 +778,4 @@ class ServiceHandler:
         for service in self._services:
             await service.delete()
         self._services.clear()
-        self._config = self.Config()
         logger.debug("ServiceHandler deleted.")

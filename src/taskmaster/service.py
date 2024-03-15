@@ -414,7 +414,6 @@ class Service:
         for process in self._processes:
             await process.delete()
         self._processes.clear()
-        self._config = self.Config()
         logger.debug(f"Service {self._config.name} deleted.")
 
     @property
@@ -459,6 +458,7 @@ class Service:
                 self._processes.remove(process)
                 self._create_subprocesses(num=1)
 
+        logger.debug(f"Config is now: {config}")
         self._config = self.Config(**config)
         return tasks
 
@@ -730,8 +730,7 @@ class ServiceHandler:
         """
         return self._config
 
-    @config.setter
-    def config(self, config: Dict[Any, Any]) -> List[asyncio.Task]:
+    async def set_config(self, config: Dict[Any, Any]) -> Config:
         """
         Sets the configuration parameters for the service and reloads them.
 
@@ -743,23 +742,37 @@ class ServiceHandler:
         """
         tasks: List[asyncio.Task] = []
 
+        services = self._services.copy()
+
+        # If the service is not in the list, remove it
+        for service in services:
+            if service.config not in [s["name"] for s in self._config.services]:
+                logger.debug(
+                    f"Handler: Removing service {service.config.name} after config reload"
+                )
+                logger.debug(f"Services.config: {service._config.name}")
+                tasks.append(asyncio.create_task(service.delete()))
+                self._services.remove(service)
         for service in self._config.services:
             # If the service is not in the list, add it
             if service["name"] not in [s.config.name for s in self._services]:
+                logger.debug(
+                    f"Handler: Adding service {service['name']} after config reload"
+                )
                 self._services.append(Service(**dict(service)))
             # If the service is in the list, update it
             else:
                 for s in self._services:
                     if s.config.name == service["name"]:
+                        logger.debug(
+                            f"Handler: Updating service {service['name']} after config reload"
+                        )
                         s.config = dict(service)
-        # If the service is not in the list, remove it
-        for service in self._services:
-            if service.config not in [s["name"] for s in self._config.services]:
-                tasks.append(asyncio.create_task(service.delete()))
-                self._services.remove(service)
         tasks.append(asyncio.create_task(self.autostart()))
+        logger.debug(f"Handler: Config is now: {config}")
         self._config = self.Config(**config)
-        return tasks
+        logger.debug("HANDLER: Config updated.")
+        return self.config
 
     def flush(self, service_name: str) -> None:
         """

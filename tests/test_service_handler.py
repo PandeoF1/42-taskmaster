@@ -22,7 +22,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         service = ServiceHandler(**config)
         services = config.get("services")
         services[0]["cmd"] = "echo 'fake command'"  # type: ignore
-        service.config = config
+        asyncio.create_task(service.set_config(config))
         self.assertEqual(
             dict(service.config),
             dict(ServiceHandler.Config(**config)),

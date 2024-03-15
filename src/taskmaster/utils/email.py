@@ -30,17 +30,11 @@ def send_email(config, subject, message):
     """
     try:
         if config.email:
-            with SMTP(
-                config.email["smtp_server"], config.email["smtp_port"]
-            ) as server:
+            with SMTP(config.email["smtp_server"], config.email["smtp_port"]) as server:
                 server.starttls()
-                server.login(
-                    config.email["smtp_email"], config.email["smtp_password"]
-                )
+                server.login(config.email["smtp_email"], config.email["smtp_password"])
                 msg = f"Subject: {subject}\n\n{message}"
-                server.sendmail(
-                    config.email["smtp_email"], config.email["to"], msg
-                )
+                server.sendmail(config.email["smtp_email"], config.email["to"], msg)
                 return True
         else:
             logger.warning("No email configuration found")

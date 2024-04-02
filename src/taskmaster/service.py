@@ -427,40 +427,50 @@ class Service:
         return self._config
 
     @config.setter
-    def config(self, config: Dict[Any, Any]) -> List[asyncio.Task]:
+    def config(self, config: Dict[Any, Any]) -> Config:
         """
         Sets the configuration parameters for the service.
 
         Args:
             config: The new configuration parameters as a dictionary.
         """
-        tasks: List[asyncio.Task] = []
+        self._config = self.Config(**config)
+        return self._config
 
-        for _ in range(config["numprocs"] - len(self._processes)):
-            process = self._processes.pop(0)
-            tasks.append(asyncio.create_task(process.delete()))
+    async def reload(self) -> None:
+        """
+        Reloads the service configuration.
+
+        Must be called after updating the configuration.
+        """
+        tasks: List[asyncio.Task] = []
+        config: dict = dict(self._config)
 
         for _ in range(len(self._processes) - config["numprocs"]):
-            self._create_subprocesses(num=1)
+            print("Deleting process")
+            process = self._processes.pop()
+            tasks.append(asyncio.create_task(process.delete()))
 
-        for process in self._processes:
-            new_config = {
-                "cmd": config["cmd"],
-                "umask": config["umask"],
-                "workingdir": config["workingdir"],
-                "stdout": self.stdout,
-                "stderr": self.stderr,
-                "user": config["user"],
-                "env": config["env"],
-            }
-            if new_config != process.config:
-                asyncio.create_task(process.delete())
-                self._processes.remove(process)
-                self._create_subprocesses(num=1)
+        self._create_subprocesses(num=len(self._processes) - config["numprocs"])
 
-        logger.debug(f"Config is now: {config}")
-        self._config = self.Config(**config)
-        return tasks
+        new_config = {
+            "cmd": config["cmd"],
+            "umask": config["umask"],
+            "workingdir": config["workingdir"],
+            "stdout": self.stdout,
+            "stderr": self.stderr,
+            "user": config["user"],
+            "env": config["env"],
+        }
+
+        # The processes all have the same config, so why not take only the first one
+        if new_config != self._processes[0].config:
+            for process in self._processes:
+                tasks.append(asyncio.create_task(process.delete()))
+            self._processes = []
+            self._create_subprocesses(num=config["numprocs"])
+
+        await asyncio.gather(*tasks)
 
     async def autostart(self) -> None:
         """
@@ -599,7 +609,17 @@ class Service:
         """
         Returns the status of the service.
         """
-        return {process._parent_name: process.state for process in self._processes}
+        status: dict[str, Any] = dict(
+            {
+                "name": self.config.name,
+                "cmd": self.config.cmd,
+            }
+        )
+        count = 0
+        for process in self._processes:
+            count += 1
+            status[f"process_{count}"] = process.state
+        return status
 
     def flush(self) -> None:
         """

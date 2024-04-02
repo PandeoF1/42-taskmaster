@@ -19,7 +19,7 @@ def services(self) -> None:
         self.win_active = "services"
         self.box("services")
         self.win["services"].addstr(3, 4, "Taskmaster - Services")
-        content = table(self.service_handler.status())
+        content = table(self.service_handler.status)
         # Clear the window
         for i in range(self.height - 8):
             self.win["services"].addstr(4 + i, 4, " " * (self.width - 6))

@@ -49,7 +49,6 @@ class SubProcess:
         self._process: Process | None = None
         self._state: SubProcess.State = self.State.STOPPED
         self._retries: int = 0
-        self._lock: asyncio.Lock = asyncio.Lock()
 
     async def delete(self) -> None:
         """
@@ -447,7 +446,6 @@ class Service:
         config: dict = dict(self._config)
 
         for _ in range(len(self._processes) - config["numprocs"]):
-            print("Deleting process")
             process = self._processes.pop()
             tasks.append(asyncio.create_task(process.delete()))
 
@@ -463,12 +461,14 @@ class Service:
             "env": config["env"],
         }
 
-        # The processes all have the same config, so why not take only the first one
+        # The processes all have the same config, so why not take it from the first one
         if new_config != self._processes[0].config:
             for process in self._processes:
                 tasks.append(asyncio.create_task(process.delete()))
             self._processes = []
             self._create_subprocesses(num=config["numprocs"])
+
+        tasks.append(asyncio.create_task(self.autostart()))
 
         await asyncio.gather(*tasks)
 
@@ -668,6 +668,7 @@ class ServiceHandler:
         for service in self._config.services:
             self._services.append(Service(**dict(service)))
 
+    @property
     def status(self) -> list[dict[str, str]]:
         """
         Displays the status of all services.
@@ -750,7 +751,21 @@ class ServiceHandler:
         """
         return self._config
 
-    async def set_config(self, config: Dict[Any, Any]) -> Config:
+    @config.setter
+    def config(self, config: Dict[Any, Any]) -> Config:
+        """
+        Sets the configuration parameters for the service.
+
+        Args:
+            config: The new configuration parameters as a dictionary.
+
+        Returns:
+            The configuration parameters.
+        """
+        self._config = self.Config(**config)
+        return self._config
+
+    async def reload(self) -> Config:
         """
         Sets the configuration parameters for the service and reloads them.
 
@@ -762,32 +777,29 @@ class ServiceHandler:
         """
         tasks: List[asyncio.Task] = []
 
-        services = self._services.copy()
+        config = dict(self._config)
 
-        # If the service is not in the list, remove it
-        for service in services:
-            if service.config not in [s["name"] for s in self._config.services]:
-                logger.debug(
-                    f"Handler: Removing service {service.config.name} after config reload"
-                )
-                logger.debug(f"Services.config: {service._config.name}")
+        # If the service is not in the new config, remove it
+        for service in self._services.copy():
+            if service.config.name not in [service.get("name") for service in config["services"]]:
                 tasks.append(asyncio.create_task(service.delete()))
                 self._services.remove(service)
-        for service in self._config.services:
-            # If the service is not in the list, add it
-            if service["name"] not in [s.config.name for s in self._services]:
-                logger.debug(
-                    f"Handler: Adding service {service['name']} after config reload"
-                )
-                self._services.append(Service(**dict(service)))
-            # If the service is in the list, update it
-            else:
-                for s in self._services:
-                    if s.config.name == service["name"]:
-                        logger.debug(
-                            f"Handler: Updating service {service['name']} after config reload"
-                        )
-                        s.config = dict(service)
+
+        # If the service is still in the new config, update it
+        for service in self._services:
+            for service_config in config["services"]:
+                if service.config.name == service_config.get("name"):
+                    service.config = service_config
+                    tasks.append(asyncio.create_task(service.reload()))
+                    break
+
+        # If the service is not in the old config, add it
+        for service_config in config["services"]:
+            if service_config.get("name") not in [
+                service.config.name for service in self._services
+            ]:
+                self._services.append(Service(**dict(service_config)))
+
         tasks.append(asyncio.create_task(self.autostart()))
         logger.debug(f"Handler: Config is now: {config}")
         self._config = self.Config(**config)
@@ -800,8 +812,7 @@ class ServiceHandler:
         """
         for service in self._services:
             if service.config.name == service_name:
-                service.flush()
-                return
+                return service.flush()
         logger.warning(f"Service {service_name} not found.")
 
     async def delete(self) -> None:

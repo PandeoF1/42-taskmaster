@@ -309,15 +309,21 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         await service.start()
         await asyncio.sleep(0.1)
         self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
-        for process in service._processes:
-            print(process._cmd)
-        print(service.status)
-        config["cmd"] = "echo 'new command'"
+        config["cmd"] = "sleep 2"
         service.config = config
         await service.reload()
+        self.assertEqual(service._processes[0]._cmd, "sleep 2")
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.STOPPED)
+        await service.start()
+        await asyncio.sleep(1.1)
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.EXITED)
+
+    async def test_reload_change_nothing(self):
+        config = Config("./tests/config_templates/valid/test_reload.yml").services[0]
+        service = Service(**config)
+        await service.start()
         await asyncio.sleep(0.1)
         self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
-        for process in service._processes:
-            print(process._cmd)
-        print(service.status)
-        self.assertEqual(service._processes[0]._cmd, "echo 'new command'")
+        service.config = config
+        await service.reload()
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)

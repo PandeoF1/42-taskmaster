@@ -22,7 +22,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         service = ServiceHandler(**config)
         services = config.get("services")
         services[0]["cmd"] = "echo 'fake command'"  # type: ignore
-        asyncio.create_task(service.set_config(config))
+        service.config = config
         self.assertEqual(
             dict(service.config),
             dict(ServiceHandler.Config(**config)),
@@ -33,7 +33,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         config["services"][0]["autostart"] = False  # type: ignore
         service = ServiceHandler(**config)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -53,7 +53,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.start())
         await asyncio.sleep(0.1)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -72,7 +72,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         )
         await asyncio.sleep(1)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -91,7 +91,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         )
         await asyncio.sleep(1)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -114,7 +114,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         config["services"][0]["autostart"] = False  # type: ignore
         service = ServiceHandler(**config)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -134,7 +134,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.start())
         await asyncio.sleep(0.1)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -154,7 +154,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.stop())
         await asyncio.sleep(0.001)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -173,7 +173,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         )
         await asyncio.sleep(1)
         self.assertEqual(
-            service.status(),
+            service.status,
             [
                 {
                     "name": "sleep all",
@@ -198,9 +198,8 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         service = ServiceHandler(**config)
         asyncio.create_task(service.autostart())
         await asyncio.sleep(5.1)
-        print(service.status())
         self.assertEqual(
-            service.status()[0],
+            service.status[0],
             {
                 "name": "sleep all",
                 "cmd": "sleep 2",
@@ -211,7 +210,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(service.start(["sleep all"]))
         await asyncio.sleep(0.1)
         self.assertEqual(
-            service.status()[0],
+            service.status[0],
             {
                 "name": "sleep all",
                 "cmd": "sleep 2",
@@ -221,7 +220,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         )
         await asyncio.sleep(3.0)
         self.assertEqual(
-            service.status()[0],
+            service.status[0],
             {
                 "name": "sleep all",
                 "cmd": "sleep 2",
@@ -230,11 +229,129 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
             },
         )
 
-    async def test_restart(self):
-        pass
+    async def test_reload_new_service(self):
+        config = self.config
+        handler = ServiceHandler(**config)
+        asyncio.create_task(handler.start())
+        await asyncio.sleep(1)
+        config["services"].append(
+            {
+                "name": "blabla",
+                "cmd": "echo blabla",
+                "autostart": False,
+                "autorestart": "always",
+                "startretries": 1,
+                "stdout": "/tmp/sleep.stdout",
+                "stderr": "/tmp/sleep.stderr",
+                "numprocs": 1,
+                "exitcodes": [0, 2],
+                "stopsignal": "SIGTERM",
+                "stopwaitsecs": 10,
+                "umask": "022",
+                "workingdir": "/tmp",
+                "env": {"OUI": "OUI"},
+                "user": None,
+            }
+        )
+        handler.config = config
+        asyncio.create_task(handler.reload())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            handler.status[2],
+            {
+                "name": "blabla",
+                "cmd": "echo blabla",
+                "process_1": "Stopped",
+            },
+        )
+        self.assertEqual(
+            handler.status[1],
+            {
+                "name": "echo OUIII",
+                "cmd": "echo OUIII",
+                "process_1": "Exited",
+                "process_2": "Exited",
+                "process_3": "Exited",
+            },
+        )
 
-    async def test_autostart(self):
-        pass
+    async def test_reload_remove_service(self):
+        config = self.config
+        handler = ServiceHandler(**config)
+        asyncio.create_task(handler.start())
+        await asyncio.sleep(1)
+        config["services"].pop(0)
+        handler.config = config
+        asyncio.create_task(handler.reload())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            handler.status[0],
+            {
+                "name": "echo OUIII",
+                "cmd": "echo OUIII",
+                "process_1": "Exited",
+                "process_2": "Exited",
+                "process_3": "Exited",
+            },
+        )
+        self.assertEqual(len(handler.status), 1)
 
-    async def test_reload(self):
-        pass
+    async def test_reload_update_service(self):
+        config = self.config
+        handler = ServiceHandler(**config)
+        asyncio.create_task(handler.start())
+        await asyncio.sleep(1)
+        config["services"][0]["cmd"] = "echo 'fake command'"
+        handler.config = config
+        asyncio.create_task(handler.reload())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            handler.status[0],
+            {
+                "name": "sleep all",
+                "cmd": "echo 'fake command'",
+                # Autostart is True
+                "process_1": "Starting",
+                "process_2": "Starting",
+            },
+        )
+        self.assertEqual(
+            handler.status[1],
+            {
+                "name": "echo OUIII",
+                "cmd": "echo OUIII",
+                "process_1": "Exited",
+                "process_2": "Exited",
+                "process_3": "Exited",
+            },
+        )
+
+    async def test_reload_update_service_with_autostart_false(self):
+        config = self.config
+        handler = ServiceHandler(**config)
+        asyncio.create_task(handler.start())
+        await asyncio.sleep(1)
+        config["services"][0]["cmd"] = "echo 'fake command'"
+        config["services"][0]["autostart"] = False
+        handler.config = config
+        asyncio.create_task(handler.reload())
+        await asyncio.sleep(0.1)
+        self.assertEqual(
+            handler.status[0],
+            {
+                "name": "sleep all",
+                "cmd": "echo 'fake command'",
+                "process_1": "Stopped",
+                "process_2": "Stopped",
+            },
+        )
+        self.assertEqual(
+            handler.status[1],
+            {
+                "name": "echo OUIII",
+                "cmd": "echo OUIII",
+                "process_1": "Exited",
+                "process_2": "Exited",
+                "process_3": "Exited",
+            },
+        )

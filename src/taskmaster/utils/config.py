@@ -233,3 +233,48 @@ class Config:
         if "email" not in self.config:
             return None
         return self.config["email"]
+
+
+def generate_config(path: str):
+    """
+    Generate a default configuration file.
+
+    Args:
+    - path: The path to the configuration file.
+    """
+
+    try:
+        with open(path, "w") as file:
+            file.write(
+                """\
+email:
+  to: ""
+  smtp_email: ""
+  smtp_password: ""
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 465
+
+services:
+  - name:
+    cmd:
+    numprocs: 1 # min 1 max 32
+    umask: 077
+    workingdir: /tmp
+    autostart: true
+    autorestart: unexpected # always, never unexpected
+    exitcodes:
+    - 0
+    startretries: 3
+    starttime: 5
+    stopsignal: USR1
+    stoptime: 10
+    # env:
+    #  key: "value"
+    # stdout: /tmp/taskmaster.log
+    # stderr: /tmp/taskmaster.log
+    # user: xxx
+"""
+            )
+    except Exception as e:
+        logger.error(f"Failed to generate configuration file. {e}")
+        raise Exception("Failed to generate configuration file.")

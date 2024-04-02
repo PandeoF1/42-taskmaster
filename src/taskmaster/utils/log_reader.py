@@ -27,6 +27,7 @@ class LogReader:
         log_level: str = "DEBUG",
         size: int = 20,
     ) -> None:
+        self._path = log_file
         self._log_file = open(log_file, "r")
         self._log_level = log_level
         self._start = 0
@@ -183,3 +184,5 @@ class LogReader:
         self.stay_end = True
         self._read()
         self._start = len(self._buffer) - self._size
+        if self._start < 0:
+            self._start = 0

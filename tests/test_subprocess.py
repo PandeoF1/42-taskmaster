@@ -89,7 +89,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
                 stdout=f,
             )
             await subprocess.start(retries=0, starttime=0)
-            await subprocess.wait()
+            await subprocess.wait(0)
             self.assertEqual(subprocess.state.name, "EXITED")
         with open("/tmp/stdout.log", "r") as f:
             self.assertEqual(f.read(), "Hello, World!\n")
@@ -104,7 +104,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
                 stderr=f,
             )
             await subprocess.start(retries=0, starttime=0)
-            await subprocess.wait()
+            await subprocess.wait(0)
             self.assertEqual(subprocess.state.name, "EXITED")
         with open("/tmp/stderr.log", "r") as f:
             self.assertEqual(
@@ -133,7 +133,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         )
         await subprocess.start(retries=0, starttime=0)
         self.assertEqual(subprocess.state.name, "RUNNING")
-        await subprocess.wait()
+        await subprocess.wait(1)
         self.assertEqual(subprocess.state.name, "EXITED")
         await subprocess.autorestart(
             exitcodes=[0], starttime=0, retries=1, autorestart=AutoRestart.ALWAYS.value
@@ -149,7 +149,7 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         )
         await subprocess.start(retries=0, starttime=0)
         self.assertEqual(subprocess.state.name, "RUNNING")
-        await subprocess.wait()
+        await subprocess.wait(1)
         self.assertEqual(subprocess.state.name, "EXITED")
         await subprocess.autorestart(
             exitcodes=[1],
@@ -168,10 +168,10 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         )
         await subprocess.start(retries=0, starttime=0)
         self.assertEqual(subprocess.state.name, "RUNNING")
-        await subprocess.wait()
+        await subprocess.wait(1)
         self.assertEqual(subprocess.state.name, "EXITED")
         await subprocess.autorestart(
-            exitcodes=[0], starttime=0, retries=1, autorestart=AutoRestart.NEVER
+            exitcodes=[0], starttime=0, retries=1, autorestart=AutoRestart.NEVER.name
         )
         self.assertEqual(subprocess.state.name, "EXITED")
 

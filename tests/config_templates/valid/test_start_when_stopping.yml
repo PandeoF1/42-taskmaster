@@ -1,0 +1,16 @@
+services:
+  - name: start when stopping
+    cmd: "./sigkill.out"
+    numprocs: 1
+    umask: 077
+    workingdir: ./tests/programs
+    autostart: true
+    autorestart: never
+    exitcodes:
+      - 0
+    startretries: 1
+    starttime: 0
+    stopsignal: USR1
+    stoptime: 10
+    stdout: /tmp/sigkill.stdout
+    stderr: /tmp/sigkill.stderr

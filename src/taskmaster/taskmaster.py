@@ -1,34 +1,50 @@
 import curses
 import asyncio
-import sys
 import signal
 import argparse
+from .utils.email import Email
 from typing import Any
-import random
+
+from .service import ServiceHandler
 
 from .utils.logger import logger
 from .gui.gui import Gui
 from .utils.config import Config, generate_config
 
-# log = logger("taskmaster")
+need_reload = False
+need_exit = False
 
 
-# Handle ctrl c
 def signal_handler(sig: Any, frame: Any) -> None:
     logger.warning("CTRL+C detected. Exiting...")
-    # Do this properly
-    sys.exit(0)
+    global need_exit
+    need_exit = True
+
+
+def reload_config(sig: Any, frame: Any) -> None:
+    logger.info("Reloading configuration. (SIGHUP)")
+    global need_reload
+    need_reload = True
 
 
 def init_signal() -> None:
-    # logger.log("Initializing signal handler.")
+    logger.info("Initializing signal handler.")
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGHUP, reload_config)
 
 
 async def interfaces(stdscr, config) -> None:
-    # logger.log("Starting taskmaster.")
+    logger.info("Starting taskmaster.")
+    global need_reload, need_exit
     try:
+        if config.email:
+            email = Email(config)
+            asyncio.create_task(email.send("hello", "Taskmaster started."))
         interface = Gui()
+        interface.service_handler = ServiceHandler(
+            **dict({"services": config.services})
+        )
+        task = asyncio.create_task(interface.service_handler.autostart())
         interface.config = config
         interface.default()
         while True:
@@ -36,7 +52,7 @@ async def interfaces(stdscr, config) -> None:
             interface.update_size()
             key = interface.win[interface.win_active].getch()
             stop = interface.default_nav(key)
-            if stop == -1:
+            if stop == -1 or need_exit:
                 break
             elif stop:
                 continue
@@ -46,26 +62,27 @@ async def interfaces(stdscr, config) -> None:
                 break
             elif interface.log_nav(key) == -1:
                 break
-        # Stop all services
+            if need_reload:
+                need_reload = False
+                config = Config(config.path)
+                # ici reload service handler
+                interface.service_handler.config = dict({"services": config.services})
+                interface.config = config
+                interface.configuration_success()
+                interface.default()
+        interface.services_destroy()
+        await interface.service_handler.delete()
+        await asyncio.sleep(2)
         interface.end()
+        task.cancel()
     except Exception as e:
         logger.error(e)
-
-
-async def test(config: Config) -> None:
-    while True:
-        # logger.info("test")
-        # edit config
-        config.services[0]["numprocs"] = random.randint(1, 100)
-        await asyncio.sleep(0.5)
 
 
 async def taskmaster(config: Config) -> None:
     logger.info("Starting taskmaster.")
     init_signal()
-    # Execute interfaces and test in parallel
-    await asyncio.gather(curses.wrapper(interfaces, config), test(config))
-    # logger.close()
+    await asyncio.gather(curses.wrapper(interfaces, config))
 
 
 def main() -> None:

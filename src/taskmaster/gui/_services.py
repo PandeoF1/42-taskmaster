@@ -2,6 +2,7 @@ import curses
 from .table import table
 from ..utils.logger import logger
 from ..utils.log_reader import LogReader
+import asyncio
 
 
 def services(self) -> None:
@@ -18,7 +19,7 @@ def services(self) -> None:
         self.win_active = "services"
         self.box("services")
         self.win["services"].addstr(3, 4, "Taskmaster - Services")
-        content = table(self.config.services)
+        content = table(self.service_handler.status())
         # Clear the window
         for i in range(self.height - 8):
             self.win["services"].addstr(4 + i, 4, " " * (self.width - 6))
@@ -93,6 +94,11 @@ def services(self) -> None:
             4,
             "Press 'q' to go back. - (↑•↓•←•→ to navigate, e to open stderr, o to open stdout)",
         )
+        self.win["services"].addstr(
+            self.height - 2,
+            4 + 24,
+            "(s to start, k to stop, r to restart)",
+        )
         self.win["services"].refresh()
     except curses.error as e:
         logger.error(f"Failed to load services page. {e}")
@@ -141,18 +147,6 @@ def services_nav(self, key: int) -> None:
             ):
                 self.win_data["services"]["index_x"] += 2
         try:
-            if key == 10:  # Enter
-                # logger.info(
-                #    f"Selected service: {self.win_data['services']['selected_line']} {self.config.services[self.win_data['services']['selected_line']]['name']} {self.config.services[self.win_data['services']['selected_line']]['stdout']}"
-                # )
-                self.log(
-                    LogReader(
-                        log_file=self.config.services[
-                            self.win_data["services"]["selected_line"]
-                        ]["stdout"]
-                    )
-                )
-                return
             if key == 101:  # e -> stderr
                 self.log(
                     LogReader(
@@ -162,7 +156,7 @@ def services_nav(self, key: int) -> None:
                     )
                 )
                 return
-            if key == 111:  # o -> open stdout
+            if key == 111 or key == 10:  # o or enter -> open stdout
                 self.log(
                     LogReader(
                         log_file=self.config.services[
@@ -171,9 +165,66 @@ def services_nav(self, key: int) -> None:
                     )
                 )
                 return
+            # key s
+            if key == 115:
+                asyncio.create_task(
+                    self.service_handler.start(
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
+                    )
+                )
+            # key k
+            if key == 107:
+                asyncio.create_task(
+                    self.service_handler.stop(
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
+                    )
+                )
+            # key r
+            if key == 114:
+                asyncio.create_task(
+                    self.service_handler.restart(
+                        [
+                            self.config.services[
+                                self.win_data["services"]["selected_line"]
+                            ]["name"]
+                        ]
+                    )
+                )
         except FileNotFoundError as e:
             self.log_not_found(e.filename)
             return
+        except Exception as e:
+            logger.error(e)
+            self.log_error()
         self.services()
     except curses.error as e:
         logger.error(f"[Services] Failed to navigate. {e}")
+
+
+def services_destroy(self):
+    try:
+        if "services_destroy" not in self.win:
+            self.win["services_destroy"] = curses.newwin(self.height, self.width, 0, 0)
+            self.win_data["services_destroy"] = dict()
+            self.win_data["services_destroy"]["selected"] = "services_destroy"
+        self.win_active = "services_destroy"
+        self.box("services_destroy")
+        self.win["services_destroy"].addstr(
+            3, 4, "Taskmaster - Destruction of services"
+        )
+        self.win["services_destroy"].addstr(
+            int(self.height / 2),
+            int(self.width / 2 - 31),
+            "Destruction of services in progress...",
+        )
+        self.win["services_destroy"].refresh()
+    except Exception as e:
+        logger.error(f"[Services] Failed to load services destroy page. {e}")

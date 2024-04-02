@@ -1,7 +1,7 @@
 services:
-  - name: sleep all
-    cmd: "sleep 2"
-    numprocs: 1
+  - name: reload
+    cmd: "sleep 100"
+    numprocs: 8
     umask: 077
     workingdir: /tmp
     autostart: false
@@ -15,4 +15,3 @@ services:
     stoptime: 10
     stdout: /tmp/sleep.stdout
     stderr: /tmp/sleep.stderr
-  #   user: vscode

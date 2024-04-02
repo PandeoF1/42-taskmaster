@@ -1,6 +1,3 @@
-from ..utils.logger import logger
-
-
 # Generate config table
 def table(data):
     # Get the keys (column names) from the first row of data

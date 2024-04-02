@@ -137,7 +137,7 @@ schema = {
                 },
                 "startretries": {
                     "type": "integer",
-                    "min": 1,
+                    "min": 0,
                     "max": 10,
                     "required": True,
                 },
@@ -215,11 +215,9 @@ class Config:
             logger.error("No configuration file found.")
             raise FileNotFoundError("No configuration file found.")
         except SchemaError as e:
-            print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
             raise SchemaError("Invalid configuration file.")
         except ValueError as e:
-            print(f"Invalid configuration file: {e}")
             logger.error(f"Invalid configuration file. {e}")
             raise ValueError("Invalid configuration file.")
         except Exception as e:

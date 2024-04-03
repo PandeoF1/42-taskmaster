@@ -1,6 +1,8 @@
 import unittest
 import asyncio
 import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
 import os
@@ -327,3 +329,103 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         service.config = config
         await service.reload()
         self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+
+    async def test_send_email_on_start_one_proc(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            self.assertEqual(email_mock.send.call_count, 1)
+            email_mock.send_start.assert_called_with(
+                config.get("name"), SubProcess.State.RUNNING.name
+            )
+
+        async def test_send_email_on_start_multiple_procs(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config["numprocs"] = 8
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            self.assertEqual(service.status.get("process_2"), SubProcess.State.RUNNING)
+            self.assertEqual(email_mock.send_start.call_count, 8)
+            email_mock.send_start.assert_called_with(
+                config.get("name"), SubProcess.State.RUNNING.name
+            )
+
+    async def test_send_email_on_stop_one_proc(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            await service.stop()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.STOPPED)
+            self.assertEqual(email_mock.send_stop.call_count, 1)
+            email_mock.send_stop.assert_called_with(
+                config.get("name"), SubProcess.State.STOPPED.name
+            )
+
+    async def test_send_email_on_stop_multiple_procs(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config["numprocs"] = 8
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            await service.stop()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.STOPPED)
+            self.assertEqual(email_mock.send_stop.call_count, 8)
+            email_mock.send_stop.assert_called_with(
+                config.get("name"), SubProcess.State.STOPPED.name
+            )
+
+    async def test_send_email_on_fatal_one_proc(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config["autorestart"] = "never"
+        config["startretries"] = 0
+        config["starttime"] = 10
+        config["cmd"] = "dontexist"
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.FATAL)
+            self.assertEqual(email_mock.send_exited.call_count, 1)
+            email_mock.send_exited.assert_called_with(
+                config.get("name"), SubProcess.State.FATAL.name
+            )
+
+    async def test_send_email_on_fatal_multiple_procs(self):
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config["numprocs"] = 8
+        config["autorestart"] = "never"
+        config["startretries"] = 0
+        config["starttime"] = 10
+        config["cmd"] = "dontexist"
+        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
+        with patch("src.taskmaster.utils.email.Email", email_mock):
+            service = Service(email=email_mock, **config)
+            await service.start()
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
+            await asyncio.sleep(0.1)
+            self.assertEqual(service.status.get("process_1"), SubProcess.State.FATAL)
+            self.assertEqual(email_mock.send_exited.call_count, 8)
+            email_mock.send_exited.assert_called_with(
+                config.get("name"), SubProcess.State.FATAL.name
+            )

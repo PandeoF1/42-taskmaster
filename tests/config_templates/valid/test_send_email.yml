@@ -1,0 +1,17 @@
+services:
+  - name: reload
+    cmd: "sleep 100"
+    numprocs: 1
+    umask: 077
+    workingdir: /tmp
+    autostart: false
+    autorestart: never
+    exitcodes:
+      - 0
+      - 2
+    startretries: 3
+    starttime: 1
+    stopsignal: USR1
+    stoptime: 10
+    stdout: /tmp/sleep.stdout
+    stderr: /tmp/sleep.stderr

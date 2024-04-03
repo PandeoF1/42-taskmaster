@@ -802,7 +802,7 @@ class ServiceHandler:
         self._config = self.Config(**config)
         return self._config
 
-    async def reload(self) -> Config:
+    async def reload(self, email: Email | None = None) -> Config:
         """
         Sets the configuration parameters for the service and reloads them.
 
@@ -815,6 +815,8 @@ class ServiceHandler:
         tasks: List[asyncio.Task] = []
 
         config = dict(self._config)
+        
+        self._email = email
 
         # If the service is not in the new config, remove it
         for service in self._services.copy():

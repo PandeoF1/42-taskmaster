@@ -68,8 +68,10 @@ async def interfaces(stdscr, config) -> None:
             if need_reload:
                 need_reload = False
                 config = Config(config.path)
-                # ici reload service handler
+                if config.email:
+                    email = Email(config)
                 interface.service_handler.config = dict({"services": config.services})
+                asyncio.create_task(interface.service_handler.reload(email=email))
                 interface.config = config
                 interface.configuration_success()
                 interface.default()

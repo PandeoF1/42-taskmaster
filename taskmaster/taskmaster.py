@@ -95,6 +95,12 @@ def main() -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument("-f", "--file", help="Path to the configuration file")
         parser.add_argument("-g", "--generate", help="Generate a configuration file at path", type=str)
+        parser.add_argument(
+            "-l",
+            "--loglevel",
+            default="warning",
+            help="Provide logging level. Example --loglevel debug, default=warning",
+        )
         args = parser.parse_args()
         if args.generate:
             generate_config(args.generate)
@@ -104,6 +110,7 @@ def main() -> None:
         interface = Gui()
         interface.configuration_error(e)
         return
+    logger.setLevel(args.loglevel.upper())
     asyncio.run(taskmaster(config))
 
 

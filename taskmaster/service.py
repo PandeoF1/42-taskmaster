@@ -247,6 +247,7 @@ class SubProcess:
             logger.error(f"{self._parent_name}: Max retry attempt exceeded")
             self.state = SubProcess.State.FATAL
         else:
+            logger.info(f"{self._parent_name}: Process exited with code {self._process.returncode}")
             self.state = SubProcess.State.EXITED
         if self._email:
             asyncio.create_task(self._email.send_exited(self._parent_name, self._state.name))
@@ -270,15 +271,18 @@ class SubProcess:
             return self
 
         self._process.send_signal(stopsignal.value)
+        logger.info(f"Process {self._parent_name}: sending signal {stopsignal.name}")
         self._state = self.State.STOPPING
         for _ in range(stoptime * 10):
             await asyncio.sleep(0.1)
             if await self._poll():
                 break
         if not await self._poll():
+            logger.warning(f"Process {self._parent_name} unresponsive: killing forcefully")
             self._process.kill()
         self.retries = 0
         self._state = self.State.STOPPED
+        logger.info(f"Process {self._parent_name} stopped successfully.")
         if self._email:
             asyncio.create_task(
                 self._email.send_stop(self._parent_name, self._state.name)
@@ -444,6 +448,7 @@ class Service:
         """
         Destructor for the Service class.
         """
+        logger.info(f"Deleting service {self._config.name}")
         for process in self._processes:
             await process.delete()
         self._processes.clear()
@@ -507,7 +512,7 @@ class Service:
 
         tasks.append(asyncio.create_task(self.autostart()))
 
-        await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks)
 
     async def autostart(self) -> None:
         """
@@ -818,7 +823,7 @@ class ServiceHandler:
         tasks: List[asyncio.Task] = []
 
         config = dict(self._config)
-        
+
         self._email = email
 
         # If the service is not in the new config, remove it

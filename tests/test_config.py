@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.taskmaster.utils.config import Config
+from taskmaster.utils.config import Config
 from cerberus import SchemaError
 
 

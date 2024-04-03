@@ -66,7 +66,7 @@ or use the devcontainer provided in the repository.
     ```
 * Without install
     ```sh
-    python -m src.taskmaster.taskmaster
+    python -m taskmaster.taskmaster
     ```
 
 ## Configuration file

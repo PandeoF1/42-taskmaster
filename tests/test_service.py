@@ -3,8 +3,8 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from src.taskmaster.service import Service, SubProcess
-from src.taskmaster.utils.config import Config
+from taskmaster.service import Service, SubProcess
+from taskmaster.utils.config import Config
 import os
 import subprocess
 
@@ -332,8 +332,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
     async def test_send_email_on_start_one_proc(self):
         config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
@@ -346,8 +346,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
     async def test_send_email_on_start_multiple_procs(self):
         config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
         config["numprocs"] = 8
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
@@ -360,8 +360,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
 
     async def test_send_email_on_stop_one_proc(self):
         config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
@@ -377,8 +377,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
     async def test_send_email_on_stop_multiple_procs(self):
         config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
         config["numprocs"] = 8
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
@@ -397,8 +397,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         config["startretries"] = 0
         config["starttime"] = 10
         config["cmd"] = "dontexist"
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
@@ -415,8 +415,8 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         config["startretries"] = 0
         config["starttime"] = 10
         config["cmd"] = "dontexist"
-        email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
-        with patch("src.taskmaster.utils.email.Email", email_mock):
+        email_mock = AsyncMock(name="taskmaster.utils.email.Email")
+        with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)

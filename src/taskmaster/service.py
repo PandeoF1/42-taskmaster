@@ -188,7 +188,7 @@ class SubProcess:
                     )
                     self._state = self.State.RUNNING
                     if self._email:
-                        asyncio.create_task(self._email.send_start(self._parent_name, self._state.value))
+                        asyncio.create_task(self._email.send_start(self._parent_name, self._state.name))
                     success = True
                 else:
                     logger.error(
@@ -216,7 +216,7 @@ class SubProcess:
             self._state = self.State.FATAL
             if self._email:
                 asyncio.create_task(
-                    self._email.send_exited(self._parent_name, self._state.value)
+                    self._email.send_exited(self._parent_name, self._state.name)
                 )
 
         return self
@@ -246,7 +246,7 @@ class SubProcess:
         else:
             self.state = SubProcess.State.EXITED
         if self._email:
-            asyncio.create_task(self._email.send_exited(self._parent_name, self._state.value))
+            asyncio.create_task(self._email.send_exited(self._parent_name, self._state.name))
         return self
 
     async def stop(self, stopsignal: str | Signal, stoptime: int) -> Self:
@@ -278,7 +278,7 @@ class SubProcess:
         self._state = self.State.STOPPED
         if self._email:
             asyncio.create_task(
-                self._email.send_stop(self._parent_name, self._state.value)
+                self._email.send_stop(self._parent_name, self._state.name)
             )
         return self
 
@@ -504,7 +504,7 @@ class Service:
 
         tasks.append(asyncio.create_task(self.autostart()))
 
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     async def autostart(self) -> None:
         """
@@ -682,7 +682,6 @@ class ServiceHandler:
             **config: Dict[Any, Any],
         ) -> None:
             self.services: List[Service.Config] = []
-            self.email: Dict[Any, Any] | None = None
             self.__dict__.update(config)
 
         def __iter__(self) -> Any:
@@ -690,6 +689,7 @@ class ServiceHandler:
 
     def __init__(
         self,
+        email: Email | None = None,
         **config: Dict[Any, Any],
     ) -> None:
         """
@@ -700,7 +700,7 @@ class ServiceHandler:
         """
         self._config: ServiceHandler.Config = self.Config(**config)
         self._services: List[Service] = []
-        self._email: Email | None = Email(self._config.email) if self._config.email else None
+        self._email: Email | None = email
 
         for service in self._config.services:
             self._services.append(Service(email=self._email, **dict(service)))

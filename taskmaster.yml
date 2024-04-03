@@ -1,9 +1,9 @@
-#email:
-#  to: "theo.nard18@gmail.com"
-#  smtp_email: "adopteunegoose@gmail.com"
-#  smtp_password: "vppa avgc yjvp emuh"
-#  smtp_server: "smtp.gmail.com"
-#  smtp_port: 587
+email:
+ to: "timotheelafay4@gmail.com"
+ smtp_email: "adopteunegoose@gmail.com"
+ smtp_password: "vppa avgc yjvp emuh"
+ smtp_server: "smtp.gmail.com"
+ smtp_port: 587
 
 services:
   - name: sleep all

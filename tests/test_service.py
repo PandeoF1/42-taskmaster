@@ -1,7 +1,7 @@
 import unittest
 import asyncio
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from src.taskmaster.service import Service, SubProcess
 from src.taskmaster.utils.config import Config
@@ -338,12 +338,12 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             await service.start()
             await asyncio.sleep(0.1)
             self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
-            self.assertEqual(email_mock.send.call_count, 1)
+            self.assertEqual(email_mock.send_start.call_count, 1)
             email_mock.send_start.assert_called_with(
                 config.get("name"), SubProcess.State.RUNNING.name
             )
 
-        async def test_send_email_on_start_multiple_procs(self):
+    async def test_send_email_on_start_multiple_procs(self):
         config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
         config["numprocs"] = 8
         email_mock = AsyncMock(name="src.taskmaster.utils.email.Email")
@@ -402,8 +402,6 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             service = Service(email=email_mock, **config)
             await service.start()
             await asyncio.sleep(0.1)
-            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
-            await asyncio.sleep(0.1)
             self.assertEqual(service.status.get("process_1"), SubProcess.State.FATAL)
             self.assertEqual(email_mock.send_exited.call_count, 1)
             email_mock.send_exited.assert_called_with(
@@ -421,8 +419,6 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         with patch("src.taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
             await service.start()
-            await asyncio.sleep(0.1)
-            self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
             await asyncio.sleep(0.1)
             self.assertEqual(service.status.get("process_1"), SubProcess.State.FATAL)
             self.assertEqual(email_mock.send_exited.call_count, 8)

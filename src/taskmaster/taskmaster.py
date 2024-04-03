@@ -40,8 +40,11 @@ async def interfaces(stdscr, config) -> None:
         if config.email:
             email = Email(config)
             asyncio.create_task(email.send("hello", "Taskmaster started."))
+        else:
+            email = None
         interface = Gui()
         interface.service_handler = ServiceHandler(
+            email=email,
             **dict({"services": config.services})
         )
         task = asyncio.create_task(interface.service_handler.autostart())

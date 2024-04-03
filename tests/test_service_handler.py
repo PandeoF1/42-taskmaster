@@ -12,14 +12,15 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         self.config: Dict[str, Dict[str, Any]] = dict({"services": config.services})
 
     async def test_config_getter(self):
+        self.maxDiff = None
         config = self.config
-        service_handler = ServiceHandler(**config)
+        service_handler = ServiceHandler(email=None, **config)
         self.assertIsInstance(service_handler.config, ServiceHandler.Config)
         self.assertEqual(dict(service_handler.config), config)
 
     async def test_config_setter(self):
         config = self.config
-        service = ServiceHandler(**config)
+        service = ServiceHandler(email=None, **config)
         services = config.get("services")
         services[0]["cmd"] = "echo 'fake command'"  # type: ignore
         service.config = config
@@ -31,7 +32,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
     async def test_start(self):
         config = self.config
         config["services"][0]["autostart"] = False  # type: ignore
-        service = ServiceHandler(**config)
+        service = ServiceHandler(email=None, **config)
         self.assertEqual(
             service.status,
             [
@@ -112,7 +113,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
     async def test_stop_when_starting(self):
         config = self.config
         config["services"][0]["autostart"] = False  # type: ignore
-        service = ServiceHandler(**config)
+        service = ServiceHandler(email=None, **config)
         self.assertEqual(
             service.status,
             [
@@ -195,7 +196,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
         config = self.config
         config["services"][0]["autorestart"] = "always"  # type: ignore
         config["services"][0]["startretries"] = 1  # type: ignore
-        service = ServiceHandler(**config)
+        service = ServiceHandler(email=None, **config)
         asyncio.create_task(service.autostart())
         await asyncio.sleep(5.1)
         self.assertEqual(
@@ -231,7 +232,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
 
     async def test_reload_new_service(self):
         config = self.config
-        handler = ServiceHandler(**config)
+        handler = ServiceHandler(email=None, **config)
         asyncio.create_task(handler.start())
         await asyncio.sleep(1)
         config["services"].append(
@@ -277,7 +278,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
 
     async def test_reload_remove_service(self):
         config = self.config
-        handler = ServiceHandler(**config)
+        handler = ServiceHandler(email=None, **config)
         asyncio.create_task(handler.start())
         await asyncio.sleep(1)
         config["services"].pop(0)
@@ -298,7 +299,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
 
     async def test_reload_update_service(self):
         config = self.config
-        handler = ServiceHandler(**config)
+        handler = ServiceHandler(email=None, **config)
         asyncio.create_task(handler.start())
         await asyncio.sleep(1)
         config["services"][0]["cmd"] = "echo 'fake command'"
@@ -328,7 +329,7 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
 
     async def test_reload_update_service_with_autostart_false(self):
         config = self.config
-        handler = ServiceHandler(**config)
+        handler = ServiceHandler(email=None, **config)
         asyncio.create_task(handler.start())
         await asyncio.sleep(1)
         config["services"][0]["cmd"] = "echo 'fake command'"

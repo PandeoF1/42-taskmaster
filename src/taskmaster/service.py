@@ -8,6 +8,7 @@ import contextlib
 
 from .utils.logger import logger
 from .utils.config import Signal, AutoRestart
+from .utils.email import Email
 
 
 class SubProcess:
@@ -37,6 +38,7 @@ class SubProcess:
         stderr: int | TextIOWrapper = subprocess.DEVNULL,
         user: str | None = None,
         env: Dict[str, str] | None = None,
+        email: Email | None = None,
     ) -> None:
         self._parent_name = parent_name
         self._cmd = cmd
@@ -49,6 +51,7 @@ class SubProcess:
         self._process: Process | None = None
         self._state: SubProcess.State = self.State.STOPPED
         self._retries: int = 0
+        self._email: Email | None = email
 
     async def delete(self) -> None:
         """
@@ -120,6 +123,20 @@ class SubProcess:
         self._user = config["user"]
         self._env = config["env"]
 
+    @property
+    def email(self) -> Email | None:
+        """
+        Gets the email configuration.
+        """
+        return self._email
+
+    @email.setter
+    def email(self, email: Email | None) -> None:
+        """
+        Sets the email configuration.
+        """
+        self._email = email
+
     async def _poll(self) -> int | None:
         if not self._process:
             return
@@ -170,6 +187,8 @@ class SubProcess:
                         f"Process {self._parent_name}-{self._process.pid} is now running."
                     )
                     self._state = self.State.RUNNING
+                    if self._email:
+                        asyncio.create_task(self._email.send_start(self._parent_name, self._state.name))
                     success = True
                 else:
                     logger.error(
@@ -195,6 +214,10 @@ class SubProcess:
 
         if not success:
             self._state = self.State.FATAL
+            if self._email:
+                asyncio.create_task(
+                    self._email.send_exited(self._parent_name, self._state.name)
+                )
 
         return self
 
@@ -222,6 +245,8 @@ class SubProcess:
             self.state = SubProcess.State.FATAL
         else:
             self.state = SubProcess.State.EXITED
+        if self._email:
+            asyncio.create_task(self._email.send_exited(self._parent_name, self._state.name))
         return self
 
     async def stop(self, stopsignal: str | Signal, stoptime: int) -> Self:
@@ -251,6 +276,10 @@ class SubProcess:
             self._process.kill()
         self.retries = 0
         self._state = self.State.STOPPED
+        if self._email:
+            asyncio.create_task(
+                self._email.send_stop(self._parent_name, self._state.name)
+            )
         return self
 
     async def autorestart(
@@ -343,6 +372,7 @@ class Service:
 
     def __init__(
         self,
+        email: Email | None = None,
         **config: Dict[str, Any],
     ) -> None:
         """
@@ -356,6 +386,7 @@ class Service:
         self._processes: List[SubProcess] = []
         self._start_tasks: List[asyncio.Task] = []
         self._wait_tasks: List[asyncio.Task] = []
+        self._email: Email | None = email
 
         self._init_stdout()
         self._init_stderr()
@@ -467,10 +498,13 @@ class Service:
                 tasks.append(asyncio.create_task(process.delete()))
             self._processes = []
             self._create_subprocesses(num=config["numprocs"])
+        else:
+            for process in self._processes:
+                process.email = self._email
 
         tasks.append(asyncio.create_task(self.autostart()))
 
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     async def autostart(self) -> None:
         """
@@ -525,6 +559,7 @@ class Service:
                 stderr=self.stderr,
                 user=self._config.user,
                 env=self._config.env,
+                email=self._email,
             )
             self._processes.append(subprocess)
 
@@ -654,6 +689,7 @@ class ServiceHandler:
 
     def __init__(
         self,
+        email: Email | None = None,
         **config: Dict[Any, Any],
     ) -> None:
         """
@@ -664,9 +700,10 @@ class ServiceHandler:
         """
         self._config: ServiceHandler.Config = self.Config(**config)
         self._services: List[Service] = []
+        self._email: Email | None = email
 
         for service in self._config.services:
-            self._services.append(Service(**dict(service)))
+            self._services.append(Service(email=self._email, **dict(service)))
 
     @property
     def status(self) -> list[dict[str, str]]:
@@ -765,7 +802,7 @@ class ServiceHandler:
         self._config = self.Config(**config)
         return self._config
 
-    async def reload(self) -> Config:
+    async def reload(self, email: Email | None = None) -> Config:
         """
         Sets the configuration parameters for the service and reloads them.
 
@@ -778,6 +815,8 @@ class ServiceHandler:
         tasks: List[asyncio.Task] = []
 
         config = dict(self._config)
+        
+        self._email = email
 
         # If the service is not in the new config, remove it
         for service in self._services.copy():
@@ -798,12 +837,10 @@ class ServiceHandler:
             if service_config.get("name") not in [
                 service.config.name for service in self._services
             ]:
-                self._services.append(Service(**dict(service_config)))
+                self._services.append(Service(email=self._email, **dict(service_config)))
 
         tasks.append(asyncio.create_task(self.autostart()))
-        logger.debug(f"Handler: Config is now: {config}")
         self._config = self.Config(**config)
-        logger.debug("HANDLER: Config updated.")
         return self.config
 
     def flush(self, service_name: str) -> None:

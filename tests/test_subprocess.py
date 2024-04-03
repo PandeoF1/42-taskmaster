@@ -242,3 +242,15 @@ class TestSubprocess(unittest.IsolatedAsyncioTestCase):
         await subprocess.stop(stopsignal=Signal.TERM, stoptime=0)
         await task
         self.assertEqual(subprocess.state.name, "STOPPED")
+
+    async def test_delete(self):
+        subprocess: SubProcess = SubProcess(
+            parent_name="sleep",
+            cmd="sleep 5",
+            umask=0o77,
+            workingdir="/tmp",
+        )
+        await subprocess.start(retries=0, starttime=0)
+        self.assertEqual(subprocess.state.name, "RUNNING")
+        await subprocess.delete()
+        self.assertNotEqual(subprocess._process.returncode, None)

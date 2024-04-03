@@ -356,3 +356,11 @@ class TestServiceHandler(unittest.IsolatedAsyncioTestCase):
                 "process_3": "Exited",
             },
         )
+
+    async def test_delete(self):
+        config = self.config
+        handler = ServiceHandler(email=None, **config)
+        asyncio.create_task(handler.start())
+        await asyncio.sleep(1)
+        await handler.delete()
+        self.assertEqual(handler.status, [])

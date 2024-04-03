@@ -57,9 +57,12 @@ class SubProcess:
         """
         Destructor for the SubProcess class.
         """
-        if self._process is not None:
-            self._process.kill()
-            await self._process.wait()
+        try:
+            if self._process and self._process.returncode is None:
+                self._process.terminate()
+                await self._process.wait()
+        except ProcessLookupError as e:
+            logger.error(f"Failed to terminate process {self._parent_name}: {e}")
 
     @property
     def state(self) -> State:

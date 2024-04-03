@@ -1,7 +1,7 @@
 [project]
 
 name = "42-taskmaster"
-version = "0.0.1"
+version = "1.0.0"
 authors = [
     { name = "Timothee Lafay", email = "tlafay@student.42lyon.fr" },
     { name = "Theo Nard", email = "tnard@student.42lyon.fr" },

@@ -1,8 +1,8 @@
 import unittest
 import asyncio
 
-from src.taskmaster.service import SubProcess
-from src.taskmaster.utils.config import Signal, AutoRestart
+from taskmaster.service import SubProcess
+from taskmaster.utils.config import Signal, AutoRestart
 
 
 class TestSubprocess(unittest.IsolatedAsyncioTestCase):

@@ -1,5 +1,5 @@
 import unittest
-from src.taskmaster.utils.log_reader import LogReader
+from taskmaster.utils.log_reader import LogReader
 
 file_content: list[str] = [
     "Hello, World!\n",

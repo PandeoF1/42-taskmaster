@@ -2,8 +2,8 @@ import unittest
 import asyncio
 from typing import Any, Dict
 
-from src.taskmaster.service import ServiceHandler
-from src.taskmaster.utils.config import Config
+from taskmaster.service import ServiceHandler
+from taskmaster.utils.config import Config
 
 
 class TestServiceHandler(unittest.IsolatedAsyncioTestCase):

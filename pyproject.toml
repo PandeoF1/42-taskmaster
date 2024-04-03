@@ -20,7 +20,7 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
-where = ["src"]
+include = ["taskmaster", "taskmaster.*"]
 
 [project.scripts]
 taskmaster = "taskmaster.taskmaster:main"

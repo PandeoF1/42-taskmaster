@@ -52,6 +52,7 @@ class Email:
                     server.starttls()
                     server.login(self.config.email["smtp_email"], self.config.email["smtp_password"])
                     msg = f"Subject: {subject}\n\n{message}"
+                    logger.info(f"Sending email to {self.config.email['to']}")
                     server.sendmail(self.config.email["smtp_email"], self.config.email["to"], msg)
                     return True
             else:

@@ -56,15 +56,7 @@ def default_nav(self, key: int) -> int:
             elif self.win_data["default"]["selected"] == "config":
                 self.configuration()
             elif self.win_data["default"]["selected"] == "reload":
-                try:
-                    config = Config(self.config.path)
-                    self.config = config
-                    # ici reload service handler
-                    self.service_handler.config = dict({"services": config.services})
-                    self.configuration_success()
-                    self.default()
-                except Exception as e:
-                    self.configuration_error(e)
+                self.need_reload = True
             return True
         self.default()
     except curses.error as e:

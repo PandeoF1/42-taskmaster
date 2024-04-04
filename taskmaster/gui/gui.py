@@ -18,6 +18,7 @@ class Gui:
             self.stdscr = curses.initscr()
             self.stdscr.keypad(True)
             self.stdscr.clear()
+            self.need_reload = False
             curses.noecho()
             curses.cbreak()
             curses.curs_set(0)

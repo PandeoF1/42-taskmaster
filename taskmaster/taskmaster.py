@@ -65,8 +65,9 @@ async def interfaces(stdscr, config) -> None:
                 break
             elif interface.log_nav(key) == -1:
                 break
-            if need_reload:
+            if need_reload or interface.need_reload:
                 need_reload = False
+                interface.need_reload = False
                 config = Config(config.path)
                 if config.email:
                     email = Email(config)

@@ -4,6 +4,7 @@ import signal
 import argparse
 from .utils.email import Email
 from typing import Any
+import os
 
 from .service import ServiceHandler
 
@@ -35,6 +36,7 @@ def init_signal() -> None:
 
 async def interfaces(stdscr, config) -> None:
     logger.info("Starting taskmaster.")
+    logger.warning(f"PID: {os.getpid()}")
     global need_reload, need_exit
     try:
         if config.email:

@@ -1,7 +1,7 @@
 [project]
 
 name = "42-taskmaster"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
     { name = "Timothee Lafay", email = "tlafay@student.42lyon.fr" },
     { name = "Theo Nard", email = "tnard@student.42lyon.fr" },
@@ -11,8 +11,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: Linux",
 ]
 dynamic = ["dependencies"]
 

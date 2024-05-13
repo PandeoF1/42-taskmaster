@@ -191,7 +191,9 @@ class SubProcess:
                     )
                     self._state = self.State.RUNNING
                     if self._email:
-                        asyncio.create_task(self._email.send_start(self._parent_name, self._state.name))
+                        asyncio.create_task(
+                            self._email.send_start(self._parent_name, self._state.name)
+                        )
                     success = True
                 else:
                     logger.error(
@@ -247,10 +249,14 @@ class SubProcess:
             logger.error(f"{self._parent_name}: Max retry attempt exceeded")
             self.state = SubProcess.State.FATAL
         else:
-            logger.info(f"{self._parent_name}: Process exited with code {self._process.returncode}")
+            logger.info(
+                f"{self._parent_name}: Process exited with code {self._process.returncode}"
+            )
             self.state = SubProcess.State.EXITED
         if self._email:
-            asyncio.create_task(self._email.send_exited(self._parent_name, self._state.name))
+            asyncio.create_task(
+                self._email.send_exited(self._parent_name, self._state.name)
+            )
         return self
 
     async def stop(self, stopsignal: str | Signal, stoptime: int) -> Self:
@@ -278,7 +284,9 @@ class SubProcess:
             if await self._poll():
                 break
         if not await self._poll():
-            logger.warning(f"Process {self._parent_name} unresponsive: killing forcefully")
+            logger.warning(
+                f"Process {self._parent_name} unresponsive: killing forcefully"
+            )
             self._process.kill()
         self.retries = 0
         self._state = self.State.STOPPED
@@ -575,17 +583,16 @@ class Service:
         """
         Starts the service.
         """
-        for process in self._processes:
-            if (
-                process.state != SubProcess.State.RUNNING
-                and process.state != SubProcess.State.STARTING
-                and process.state != SubProcess.State.STOPPING
-            ):
-                if process._process:
-                    logger.debug(
-                        f"Removing process {process._parent_name} with pid {process._process.pid} from processes"
-                    )
-                self._processes.remove(process)
+        self._processes = [
+            process
+            for process in self._processes
+            if process.state
+            not in [
+                SubProcess.State.RUNNING,
+                SubProcess.State.STARTING,
+                SubProcess.State.STOPPING,
+            ]
+        ]
 
         self._create_subprocesses(num=self._config.numprocs - len(self._processes))
         self._start_tasks: List[asyncio.Task] = []
@@ -828,7 +835,9 @@ class ServiceHandler:
 
         # If the service is not in the new config, remove it
         for service in self._services.copy():
-            if service.config.name not in [service.get("name") for service in config["services"]]:
+            if service.config.name not in [
+                service.get("name") for service in config["services"]
+            ]:
                 tasks.append(asyncio.create_task(service.delete()))
                 self._services.remove(service)
 
@@ -845,7 +854,9 @@ class ServiceHandler:
             if service_config.get("name") not in [
                 service.config.name for service in self._services
             ]:
-                self._services.append(Service(email=self._email, **dict(service_config)))
+                self._services.append(
+                    Service(email=self._email, **dict(service_config))
+                )
 
         tasks.append(asyncio.create_task(self.autostart()))
         self._config = self.Config(**config)

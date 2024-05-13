@@ -277,19 +277,13 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         service = Service(**config)
         asyncio.create_task(service.start())
         await asyncio.sleep(0.1)
-        self.assertEqual(
-            service.status.get("process_1"), SubProcess.State.RUNNING
-        )
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
         asyncio.create_task(service.stop())
         await asyncio.sleep(0.1)
-        self.assertEqual(
-            service.status.get("process_1"), SubProcess.State.STOPPING
-        )
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.STOPPING)
         asyncio.create_task(service.start())
         await asyncio.sleep(0.1)
-        self.assertEqual(
-            service.status.get("process_1"), SubProcess.State.STOPPING
-        )
+        self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
 
     async def test_reload_remove_subprocesses(self):
         config = Config("./tests/config_templates/valid/test_reload.yml").services[0]
@@ -331,7 +325,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.status.get("process_1"), SubProcess.State.RUNNING)
 
     async def test_send_email_on_start_one_proc(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         email_mock = AsyncMock(name="taskmaster.utils.email.Email")
         with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
@@ -344,7 +340,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_send_email_on_start_multiple_procs(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         config["numprocs"] = 8
         email_mock = AsyncMock(name="taskmaster.utils.email.Email")
         with patch("taskmaster.utils.email.Email", email_mock):
@@ -359,7 +357,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_send_email_on_stop_one_proc(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         email_mock = AsyncMock(name="taskmaster.utils.email.Email")
         with patch("taskmaster.utils.email.Email", email_mock):
             service = Service(email=email_mock, **config)
@@ -375,7 +375,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_send_email_on_stop_multiple_procs(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         config["numprocs"] = 8
         email_mock = AsyncMock(name="taskmaster.utils.email.Email")
         with patch("taskmaster.utils.email.Email", email_mock):
@@ -392,7 +394,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_send_email_on_fatal_one_proc(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         config["autorestart"] = "never"
         config["startretries"] = 0
         config["starttime"] = 10
@@ -409,7 +413,9 @@ class TestService(unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_send_email_on_fatal_multiple_procs(self):
-        config = Config("./tests/config_templates/valid/test_send_email.yml").services[0]
+        config = Config("./tests/config_templates/valid/test_send_email.yml").services[
+            0
+        ]
         config["numprocs"] = 8
         config["autorestart"] = "never"
         config["startretries"] = 0

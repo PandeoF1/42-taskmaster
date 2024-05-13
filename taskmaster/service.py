@@ -51,16 +51,20 @@ class SubProcess:
         self._process: Process | None = None
         self._state: SubProcess.State = self.State.STOPPED
         self._retries: int = 0
+        self.__killing: bool = False
         self._email: Email | None = email
 
     async def delete(self) -> None:
         """
         Destructor for the SubProcess class.
         """
+        self.__killing = True
         try:
             if self._process and self._process.returncode is None:
+                logger.info(f"Terminating process {self._parent_name}")
                 self._process.terminate()
                 await self._process.wait()
+                logger.debug(f"Process {self._parent_name} terminated.")
         except ProcessLookupError as e:
             logger.error(f"Failed to terminate process {self._parent_name}: {e}")
 
@@ -164,6 +168,8 @@ class SubProcess:
         success: bool = False
 
         while not success:
+            if self.__killing:
+                return self
             try:
                 if self._cmd is None:
                     raise ValueError("Command is not provided.")
@@ -314,6 +320,10 @@ class SubProcess:
             If it exited with an exit code that doesn't match one of the exit codes defined in the exitcodes
             configuration parameter for the process, it will be restarted.
         """
+
+        if self.__killing:
+            return self
+
         if self._process is None:
             logger.warning(f"Process {self._parent_name} is not running.")
             return self
